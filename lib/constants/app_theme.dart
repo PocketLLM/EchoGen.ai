@@ -139,9 +139,7 @@ class AppTheme {
       secondaryContainer: secondaryYellow,
       onSecondary: textPrimary,
       tertiary: secondaryGreen,
-      background: background,
       surface: surface,
-      onBackground: textPrimary,
       onSurface: textPrimary,
       error: secondaryRed,
     ),
@@ -196,21 +194,21 @@ class AppTheme {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
-    cardTheme: CardTheme(
+    cardTheme: const CardThemeData(
       color: surface,
       elevation: 1,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       labelColor: primaryBlue,
       unselectedLabelColor: textSecondary,
       labelStyle: labelLarge.copyWith(color: primaryBlue),
       unselectedLabelStyle: labelLarge.copyWith(color: textSecondary),
       indicatorSize: TabBarIndicatorSize.tab,
-      indicator: BoxDecoration(
+      indicator: const BoxDecoration(
         border: Border(
           bottom: BorderSide(
             color: primaryBlue,
@@ -235,9 +233,7 @@ class AppTheme {
       secondaryContainer: secondaryYellow,
       onSecondary: textPrimaryDark,
       tertiary: secondaryGreen,
-      background: backgroundDark,
       surface: surfaceDark,
-      onBackground: textPrimaryDark,
       onSurface: textPrimaryDark,
       error: secondaryRed,
     ),
@@ -292,21 +288,21 @@ class AppTheme {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
-    cardTheme: CardTheme(
+    cardTheme: const CardThemeData(
       color: surfaceDark,
       elevation: 1,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       labelColor: primaryLight,
       unselectedLabelColor: textSecondaryDark,
       labelStyle: labelLarge.copyWith(color: primaryLight),
       unselectedLabelStyle: labelLarge.copyWith(color: textSecondaryDark),
       indicatorSize: TabBarIndicatorSize.tab,
-      indicator: BoxDecoration(
+      indicator: const BoxDecoration(
         border: Border(
           bottom: BorderSide(
             color: primaryLight,

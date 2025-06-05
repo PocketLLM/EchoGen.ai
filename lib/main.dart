@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:echogenai/constants/app_theme.dart';
 import 'package:echogenai/screens/splash_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';

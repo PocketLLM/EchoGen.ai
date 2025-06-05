@@ -163,10 +163,17 @@ jobs:
           flutter analyze || echo "⚠️ Analysis completed with warnings"
         continue-on-error: true
 
+      - name: Setup iOS dependencies
+        run: |
+          echo "🔧 Setting up iOS dependencies..."
+          cd ios
+          pod install --repo-update
+          cd ..
+
       - name: Build iOS (No Codesign)
         run: |
           echo "🍎 Building iOS..."
-          flutter build ios --release --no-codesign --verbose --dart-define=FLUTTER_WEB_USE_SKIA=true
+          flutter build ios --release --no-codesign --verbose
           echo "📱 iOS build completed!"
           ls -la build/ios/iphoneos/
 
