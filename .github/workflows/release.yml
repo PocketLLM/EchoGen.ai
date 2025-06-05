@@ -1,0 +1,223 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build-number: ${{ steps.version.outputs.build-number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version info
+        id: version
+        run: |
+          # Get version from pubspec.yaml
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          BUILD_NUMBER=$(grep '^version: ' pubspec.yaml | cut -d '+' -f 2)
+          
+          # If no build number, use commit count
+          if [ -z "$BUILD_NUMBER" ]; then
+            BUILD_NUMBER=$(git rev-list --count HEAD)
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build-number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION+$BUILD_NUMBER"
+
+  build-android:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Update version in pubspec.yaml
+        run: |
+          sed -i "s/^version: .*/version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build-number }}/" pubspec.yaml
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Build App Bundle
+        run: flutter build appbundle --release
+
+      - name: Sign APK
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "APK signing would go here"
+          # Add your APK signing logic here if needed
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload App Bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
+  build-ios:
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Update version in pubspec.yaml
+        run: |
+          sed -i '' "s/^version: .*/version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build-number }}/" pubspec.yaml
+
+      - name: Build iOS (No Codesign)
+        run: |
+          flutter build ios --release --no-codesign
+
+      - name: Create iOS Archive
+        run: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r ../../../EchoGenAI-iOS-${{ needs.version.outputs.version }}.ipa Payload/
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: EchoGenAI-iOS-${{ needs.version.outputs.version }}.ipa
+
+  release:
+    needs: [version, build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: ./artifacts
+
+      - name: Download Android App Bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: android-aab
+          path: ./artifacts
+
+      - name: Download iOS IPA
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-ipa
+          path: ./artifacts
+
+      - name: Rename artifacts
+        run: |
+          mv ./artifacts/app-release.apk ./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.apk
+          mv ./artifacts/app-release.aab ./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.aab
+          ls -la ./artifacts/
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s" --max-count=10)
+          else
+            COMMITS=$(git log --pretty=format:"- %s" $LAST_TAG..HEAD)
+          fi
+          
+          # Create changelog
+          cat > CHANGELOG.md << EOF
+          ## What's New in v${{ needs.version.outputs.version }}
+          
+          ### 🚀 Features & Improvements
+          $COMMITS
+          
+          ### 📱 Downloads
+          - **Android APK**: For direct installation on Android devices
+          - **Android AAB**: For Google Play Store distribution
+          - **iOS IPA**: For iOS devices (requires sideloading)
+          
+          ### 🔧 Installation Instructions
+          
+          #### Android APK
+          1. Download the APK file
+          2. Enable "Install from unknown sources" in your device settings
+          3. Install the APK file
+          
+          #### iOS IPA
+          1. Download the IPA file
+          2. Use AltStore, Sideloadly, or similar tools to install
+          3. Trust the developer certificate in Settings > General > VPN & Device Management
+          
+          ### 🐛 Bug Reports
+          Found an issue? Please report it on our [GitHub Issues](https://github.com/Mr-Dark-debug/EchoGen.ai/issues) page.
+          
+          ### ❤️ Support
+          If you find EchoGen.ai helpful, consider [supporting the project](https://buymeacoffee.com/mrdarkdebug)!
+          EOF
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.version.outputs.version }}
+          name: EchoGen.ai v${{ needs.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+          files: |
+            ./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.apk
+            ./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.aab
+            ./artifacts/EchoGenAI-iOS-v${{ needs.version.outputs.version }}.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update latest release info
+        run: |
+          echo "✅ Release v${{ needs.version.outputs.version }} created successfully!"
+          echo "📱 Android APK: EchoGenAI-Android-v${{ needs.version.outputs.version }}.apk"
+          echo "📦 Android AAB: EchoGenAI-Android-v${{ needs.version.outputs.version }}.aab"
+          echo "🍎 iOS IPA: EchoGenAI-iOS-v${{ needs.version.outputs.version }}.ipa"

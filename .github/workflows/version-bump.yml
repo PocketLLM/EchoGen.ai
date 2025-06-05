@@ -1,0 +1,120 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install semver
+        run: npm install -g semver
+
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Bump version
+        id: new_version
+        run: |
+          CURRENT_VERSION="${{ steps.current_version.outputs.current }}"
+          NEW_VERSION=$(semver -i ${{ github.event.inputs.version_type }} $CURRENT_VERSION)
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          
+          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "build=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION+$BUILD_NUMBER"
+
+      - name: Update pubspec.yaml
+        run: |
+          sed -i "s/^version: .*/version: ${{ steps.new_version.outputs.new }}+${{ steps.new_version.outputs.build }}/" pubspec.yaml
+
+      - name: Update version in README
+        run: |
+          # Update version history in README
+          sed -i "/### Version History/a - **v${{ steps.new_version.outputs.new }}**: Latest release with new features and improvements" README.md
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add pubspec.yaml README.md
+          git commit -m "🔖 Bump version to v${{ steps.new_version.outputs.new }}"
+          git tag -a "v${{ steps.new_version.outputs.new }}" -m "Release v${{ steps.new_version.outputs.new }}"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          tags: true
+
+      - name: Create Release Notes Template
+        run: |
+          cat > release-notes.md << EOF
+          ## 🎉 EchoGen.ai v${{ steps.new_version.outputs.new }} Released!
+          
+          ### 🚀 What's New
+          - [ ] Add your new features here
+          - [ ] List improvements
+          - [ ] Mention bug fixes
+          
+          ### 🔧 Technical Changes
+          - [ ] Add technical improvements
+          - [ ] Performance enhancements
+          - [ ] Dependencies updates
+          
+          ### 📱 Download Links
+          The release will be automatically built and published when this is pushed to main branch.
+          
+          ### 🐛 Known Issues
+          - [ ] List any known issues
+          
+          ### 🙏 Contributors
+          Thanks to all contributors who made this release possible!
+          
+          ---
+          **Full Changelog**: https://github.com/Mr-Dark-debug/EchoGen.ai/compare/v${{ steps.current_version.outputs.current }}...v${{ steps.new_version.outputs.new }}
+          EOF
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "🔖 Bump version to v${{ steps.new_version.outputs.new }}"
+          title: "🔖 Release v${{ steps.new_version.outputs.new }}"
+          body-path: release-notes.md
+          branch: release/v${{ steps.new_version.outputs.new }}
+          delete-branch: true
+
+      - name: Summary
+        run: |
+          echo "## Version Bump Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Previous Version**: v${{ steps.current_version.outputs.current }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **New Version**: v${{ steps.new_version.outputs.new }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Number**: ${{ steps.new_version.outputs.build }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bump Type**: ${{ github.event.inputs.version_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "A pull request has been created for the version bump. Merge it to trigger the release build." >> $GITHUB_STEP_SUMMARY

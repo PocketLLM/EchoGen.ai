@@ -43,7 +43,7 @@ dependencies:
   http: ^1.1.0
   share_plus: ^7.2.1
   audioplayers: ^5.2.1
-  file_picker: ^5.5.0
+
   permission_handler: ^11.1.0
 
 dev_dependencies:

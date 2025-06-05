@@ -240,15 +240,9 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
           targetDirectory = Directory('/storage/emulated/0/EchoGenAI');
           locationName = 'External storage';
           break;
-        case 'custom':
-          final customPath = prefs.getString('custom_download_path');
-          if (customPath != null) {
-            targetDirectory = Directory('$customPath/EchoGenAI');
-            locationName = 'Custom folder (${customPath.split('/').last})';
-          } else {
-            targetDirectory = await getApplicationDocumentsDirectory();
-            locationName = 'App documents';
-          }
+        case 'music':
+          targetDirectory = Directory('/storage/emulated/0/Music/EchoGenAI');
+          locationName = 'Music folder';
           break;
         default:
           targetDirectory = await getApplicationDocumentsDirectory();

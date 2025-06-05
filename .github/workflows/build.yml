@@ -1,0 +1,96 @@
+name: Build and Test
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Verify the dependencies
+        run: flutter pub deps
+
+      - name: Run code analysis
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+  build-android-debug:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build APK (Debug)
+        run: flutter build apk --debug
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+
+  build-ios-debug:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
+          channel: 'stable'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build iOS (Debug, No Codesign)
+        run: flutter build ios --debug --no-codesign
+
+      - name: Archive iOS Debug Build
+        run: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r ../../../EchoGenAI-iOS-Debug.ipa Payload/
+
+      - name: Upload Debug iOS
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-debug-ipa
+          path: EchoGenAI-iOS-Debug.ipa
+          retention-days: 7

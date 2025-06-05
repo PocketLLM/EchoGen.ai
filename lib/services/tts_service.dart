@@ -553,20 +553,14 @@ class TTSService {
           // Fallback to app documents
           return await getApplicationDocumentsDirectory();
         }
-      case 'custom':
-        // Use custom selected folder
+      case 'music':
+        // Try to get music directory
         try {
-          final customPath = prefs.getString('custom_download_path');
-          if (customPath != null) {
-            final directory = Directory('$customPath/EchoGenAI');
-            if (!await directory.exists()) {
-              await directory.create(recursive: true);
-            }
-            return directory;
-          } else {
-            // Fallback to app documents if custom path is not found
-            return await getApplicationDocumentsDirectory();
+          final directory = Directory('/storage/emulated/0/Music/EchoGenAI');
+          if (!await directory.exists()) {
+            await directory.create(recursive: true);
           }
+          return directory;
         } catch (e) {
           // Fallback to app documents
           return await getApplicationDocumentsDirectory();

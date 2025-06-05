@@ -5,10 +5,12 @@
   
   **Transform any content into engaging AI-powered podcasts**
   
-  [![Flutter](https://img.shields.io/badge/Flutter-3.7.0+-02569B?style=flat&logo=flutter&logoColor=white)](https://flutter.dev)
+  [![Build and Release](https://github.com/Mr-Dark-debug/EchoGen.ai/actions/workflows/release.yml/badge.svg)](https://github.com/Mr-Dark-debug/EchoGen.ai/actions/workflows/release.yml)
+  [![Flutter](https://img.shields.io/badge/Flutter-3.24+-02569B?style=flat&logo=flutter&logoColor=white)](https://flutter.dev)
   [![Dart](https://img.shields.io/badge/Dart-3.0+-0175C2?style=flat&logo=dart&logoColor=white)](https://dart.dev)
   [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
   [![GitHub Stars](https://img.shields.io/github/stars/Mr-Dark-debug/EchoGen.ai?style=social)](https://github.com/Mr-Dark-debug/EchoGen.ai/stargazers)
+  [![GitHub Release](https://img.shields.io/github/v/release/Mr-Dark-debug/EchoGen.ai?style=flat&logo=github)](https://github.com/Mr-Dark-debug/EchoGen.ai/releases/latest)
   
   [🚀 Features](#-features) • [📱 Screenshots](#-screenshots) • [🛠️ Installation](#️-installation) • [🔧 Configuration](#-configuration) • [🤝 Contributing](#-contributing)
 </div>
@@ -114,6 +116,22 @@ flutter build appbundle --release
 ```bash
 flutter build ios --release
 ```
+
+### 🤖 Automated Releases
+
+EchoGen.ai uses GitHub Actions for automated building and releasing:
+
+- **Automatic Builds**: Every push to `main` triggers automated builds for Android and iOS
+- **Version Management**: Use the version bump workflow to automatically increment versions
+- **Release Creation**: Releases are automatically created with APK, AAB, and IPA files
+- **Quality Assurance**: All builds go through automated testing before release
+
+#### Download Latest Release
+
+Visit our [Releases page](https://github.com/Mr-Dark-debug/EchoGen.ai/releases/latest) to download:
+- **Android APK**: Direct installation file
+- **Android AAB**: Google Play Store format
+- **iOS IPA**: For sideloading on iOS devices
 
 ## 🔧 Configuration
 

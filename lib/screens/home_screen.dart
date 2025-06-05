@@ -17,7 +17,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cross_file/cross_file.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:echogenai/providers/theme_provider.dart';
 
@@ -3050,23 +3049,20 @@ class _SettingsTab extends StatelessWidget {
                 onTap: () => Navigator.of(context).pop('downloads'),
               ),
               ListTile(
-                leading: Icon(Icons.folder_open, color: AppTheme.primaryBlue),
+                leading: Icon(Icons.folder_special, color: AppTheme.secondaryOrange),
                 title: Text(
-                  'Browse & Select Folder',
+                  'Music Folder',
                   style: AppTheme.bodyMedium.copyWith(
                     color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
                   ),
                 ),
                 subtitle: Text(
-                  'Choose any folder from your device',
+                  'Device music/audio folder',
                   style: AppTheme.bodySmall.copyWith(
                     color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
                   ),
                 ),
-                onTap: () async {
-                  Navigator.of(context).pop();
-                  await _browseAndSelectFolder(context);
-                },
+                onTap: () => Navigator.of(context).pop('music'),
               ),
               ListTile(
                 leading: Icon(Icons.sd_card, color: AppTheme.onboardingYellow),
@@ -3098,6 +3094,9 @@ class _SettingsTab extends StatelessWidget {
             break;
           case 'external':
             folderName = 'External Storage';
+            break;
+          case 'music':
+            folderName = 'Music Folder';
             break;
           default:
             folderName = 'Default (App Documents)';
@@ -3131,59 +3130,7 @@ class _SettingsTab extends StatelessWidget {
     }
   }
 
-  Future<void> _browseAndSelectFolder(BuildContext context) async {
-    try {
-      // Request storage permissions
-      final status = await Permission.storage.request();
-      if (!status.isGranted) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Storage permission is required to select a folder'),
-              backgroundColor: AppTheme.secondaryRed,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-          );
-        }
-        return;
-      }
 
-      // Use file picker to select a directory
-      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
-
-      if (selectedDirectory != null) {
-        final prefs = await SharedPreferences.getInstance();
-
-        // Save the custom folder path
-        await prefs.setString('download_folder', 'Custom: ${selectedDirectory.split('/').last}');
-        await prefs.setString('download_folder_type', 'custom');
-        await prefs.setString('custom_download_path', selectedDirectory);
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Download folder set to: ${selectedDirectory.split('/').last}'),
-              backgroundColor: AppTheme.secondaryGreen,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error selecting folder: $e'),
-            backgroundColor: AppTheme.secondaryRed,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        );
-      }
-    }
-  }
 
   void _showLogoutDialog(BuildContext context) {
     final theme = Theme.of(context);
