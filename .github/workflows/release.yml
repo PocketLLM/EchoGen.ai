@@ -73,7 +73,12 @@ jobs:
       - name: Update version in pubspec.yaml
         run: |
           echo "📝 Updating version in pubspec.yaml..."
-          sed -i "s/^version: .*/version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build-number }}/" pubspec.yaml
+          NEW_VERSION="${{ needs.version.outputs.version }}+${{ needs.version.outputs.build-number }}"
+          echo "Setting version to: $NEW_VERSION"
+
+          # Use perl for cross-platform compatibility
+          perl -i -pe "s/^version: .*/version: $NEW_VERSION/" pubspec.yaml
+
           echo "✅ Updated version to: $(grep '^version:' pubspec.yaml)"
 
       - name: Analyze code
@@ -154,7 +159,12 @@ jobs:
       - name: Update version in pubspec.yaml
         run: |
           echo "📝 Updating version in pubspec.yaml..."
-          sed -i '' "s/^version: .*/version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build-number }}/" pubspec.yaml
+          NEW_VERSION="${{ needs.version.outputs.version }}+${{ needs.version.outputs.build-number }}"
+          echo "Setting version to: $NEW_VERSION"
+
+          # Use perl for cross-platform compatibility
+          perl -i -pe "s/^version: .*/version: $NEW_VERSION/" pubspec.yaml
+
           echo "✅ Updated version to: $(grep '^version:' pubspec.yaml)"
 
       - name: Analyze code
@@ -281,7 +291,7 @@ jobs:
           fi
 
           # Create changelog file
-          cat > release_notes.md << 'CHANGELOG_EOF'
+          cat > release_notes.txt << 'EOF'
           ## 🎉 What's New in v${{ needs.version.outputs.version }}
 
           ### 🚀 Features & Improvements
@@ -309,16 +319,16 @@ jobs:
 
           ### ❤️ Support
           If you find EchoGen.ai helpful, consider [supporting the project](https://buymeacoffee.com/mrdarkdebug)!
-          CHANGELOG_EOF
+          EOF
 
           # Replace placeholder with actual commits
-          sed -i "s/COMMITS_PLACEHOLDER/$COMMITS/g" release_notes.md
+          perl -i -pe "s/COMMITS_PLACEHOLDER/$COMMITS/g" release_notes.txt
 
           # Save to GitHub output
           {
-            echo "changelog<<EOF"
-            cat release_notes.md
-            echo "EOF"
+            echo "changelog<<CHANGELOG_EOF"
+            cat release_notes.txt
+            echo "CHANGELOG_EOF"
           } >> $GITHUB_OUTPUT
 
       - name: Prepare release files

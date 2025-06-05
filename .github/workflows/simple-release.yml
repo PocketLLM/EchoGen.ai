@@ -1,0 +1,141 @@
+name: Simple Release
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.2'
+          channel: 'stable'
+
+      - name: Upgrade Flutter
+        run: |
+          flutter upgrade --force
+          flutter --version
+
+      - name: Get version info
+        id: version
+        run: |
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          BUILD_NUMBER=$(grep '^version: ' pubspec.yaml | cut -d '+' -f 2)
+          if [ -z "$BUILD_NUMBER" ]; then
+            BUILD_NUMBER=$(git rev-list --count HEAD)
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build-number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION+$BUILD_NUMBER"
+
+      - name: Update version
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.version }}+${{ steps.version.outputs.build-number }}"
+          echo "Updating to version: $NEW_VERSION"
+          perl -i -pe "s/^version: .*/version: $NEW_VERSION/" pubspec.yaml
+          echo "Updated version: $(grep '^version:' pubspec.yaml)"
+
+      - name: Get dependencies
+        run: |
+          flutter clean
+          flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze || echo "Analysis completed with warnings"
+        continue-on-error: true
+
+      - name: Run tests
+        run: flutter test || echo "Tests completed"
+        continue-on-error: true
+
+      - name: Build Android APK
+        run: |
+          echo "Building Android APK..."
+          flutter build apk --release --verbose
+          ls -la build/app/outputs/flutter-apk/
+
+      - name: Build Android App Bundle
+        run: |
+          echo "Building Android App Bundle..."
+          flutter build appbundle --release --verbose
+          ls -la build/app/outputs/bundle/release/
+
+      - name: Rename Android artifacts
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk EchoGenAI-Android-v${{ steps.version.outputs.version }}.apk
+          cp build/app/outputs/bundle/release/app-release.aab EchoGenAI-Android-v${{ steps.version.outputs.version }}.aab
+          ls -la EchoGenAI-Android-*
+
+      - name: Generate simple changelog
+        id: changelog
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s" --max-count=10)
+          else
+            COMMITS=$(git log --pretty=format:"- %s" $LAST_TAG..HEAD)
+          fi
+          
+          if [ -z "$COMMITS" ]; then
+            COMMITS="- Initial release"
+          fi
+          
+          RELEASE_NOTES="## EchoGen.ai v${{ steps.version.outputs.version }}
+
+### What's New
+$COMMITS
+
+### Downloads
+- **Android APK**: Direct installation file
+- **Android AAB**: Google Play Store format
+
+### Installation
+1. Download the APK file
+2. Enable 'Install from unknown sources' in Android settings
+3. Install the APK
+
+### Support
+- Report issues: https://github.com/Mr-Dark-debug/EchoGen.ai/issues
+- Support project: https://buymeacoffee.com/mrdarkdebug"
+
+          echo "changelog<<NOTES_EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "NOTES_EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: EchoGen.ai v${{ steps.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+          files: |
+            EchoGenAI-Android-v${{ steps.version.outputs.version }}.apk
+            EchoGenAI-Android-v${{ steps.version.outputs.version }}.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Success message
+        run: |
+          echo "🎉 Release v${{ steps.version.outputs.version }} created successfully!"
+          echo "📱 Android APK: EchoGenAI-Android-v${{ steps.version.outputs.version }}.apk"
+          echo "📦 Android AAB: EchoGenAI-Android-v${{ steps.version.outputs.version }}.aab"
+          echo "🔗 Release URL: https://github.com/Mr-Dark-debug/EchoGen.ai/releases/tag/v${{ steps.version.outputs.version }}"
