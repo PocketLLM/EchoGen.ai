@@ -107,9 +107,9 @@ $COMMITS
 - **Android AAB**: Google Play Store format
 
 ### Installation
-1. Download the APK file
-2. Enable 'Install from unknown sources' in Android settings
-3. Install the APK
+# 1. Download the APK file
+# 2. Enable 'Install from unknown sources' in Android settings
+# 3. Install the APK
 
 ### Support
 - Report issues: https://github.com/Mr-Dark-debug/EchoGen.ai/issues
