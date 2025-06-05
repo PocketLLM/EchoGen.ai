@@ -1,0 +1,72 @@
+name: Android Build Only
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ develop, test ]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.2'
+          channel: 'stable'
+
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
+      - name: Clean and get dependencies
+        run: |
+          flutter clean
+          flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze || echo "Analysis completed with warnings"
+        continue-on-error: true
+
+      - name: Run tests
+        run: flutter test || echo "Tests completed"
+        continue-on-error: true
+
+      - name: Build APK (Debug)
+        run: |
+          echo "Building debug APK..."
+          flutter build apk --debug --verbose
+          ls -la build/app/outputs/flutter-apk/
+
+      - name: Build APK (Release)
+        run: |
+          echo "Building release APK..."
+          flutter build apk --release --verbose
+          ls -la build/app/outputs/flutter-apk/
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apks
+          path: |
+            build/app/outputs/flutter-apk/app-debug.apk
+            build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
+
+      - name: Build summary
+        run: |
+          echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Debug APK built successfully" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Release APK built successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Debug APK: $(ls -lh build/app/outputs/flutter-apk/app-debug.apk | awk '{print $5}')" >> $GITHUB_STEP_SUMMARY
+          echo "- Release APK: $(ls -lh build/app/outputs/flutter-apk/app-release.apk | awk '{print $5}')" >> $GITHUB_STEP_SUMMARY

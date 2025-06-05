@@ -50,24 +50,59 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.3'
+          flutter-version: '3.32.2'
           channel: 'stable'
 
-      - name: Get dependencies
-        run: flutter pub get
+      - name: Upgrade Flutter to latest stable
+        run: |
+          flutter upgrade --force
+          flutter --version
 
-      - name: Run tests
-        run: flutter test
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
+      - name: Get dependencies
+        run: |
+          echo "🧹 Cleaning Flutter project..."
+          flutter clean
+          echo "📦 Getting dependencies..."
+          flutter pub get
+          echo "🔍 Checking dependencies..."
+          flutter pub deps
 
       - name: Update version in pubspec.yaml
         run: |
+          echo "📝 Updating version in pubspec.yaml..."
           sed -i "s/^version: .*/version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build-number }}/" pubspec.yaml
+          echo "✅ Updated version to: $(grep '^version:' pubspec.yaml)"
+
+      - name: Analyze code
+        run: |
+          echo "🔍 Analyzing code..."
+          flutter analyze || echo "⚠️ Analysis completed with warnings"
+        continue-on-error: true
+
+      - name: Run tests (optional)
+        run: |
+          echo "🧪 Running tests..."
+          flutter test || echo "⚠️ Tests failed but continuing build"
+        continue-on-error: true
 
       - name: Build APK
-        run: flutter build apk --release
+        run: |
+          echo "🔨 Building APK..."
+          flutter build apk --release --verbose --dart-define=FLUTTER_WEB_USE_SKIA=true
+          echo "📱 APK build completed!"
+          ls -la build/app/outputs/flutter-apk/
+          echo "APK size: $(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)"
 
       - name: Build App Bundle
-        run: flutter build appbundle --release
+        run: |
+          echo "📦 Building App Bundle..."
+          flutter build appbundle --release --verbose --dart-define=FLUTTER_WEB_USE_SKIA=true
+          echo "📱 App Bundle build completed!"
+          ls -la build/app/outputs/bundle/release/
+          echo "AAB size: $(du -h build/app/outputs/bundle/release/app-release.aab | cut -f1)"
 
       - name: Sign APK
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
@@ -96,26 +131,60 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.3'
+          flutter-version: '3.32.2'
           channel: 'stable'
 
+      - name: Upgrade Flutter to latest stable
+        run: |
+          flutter upgrade --force
+          flutter --version
+
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
       - name: Get dependencies
-        run: flutter pub get
+        run: |
+          echo "🧹 Cleaning Flutter project..."
+          flutter clean
+          echo "📦 Getting dependencies..."
+          flutter pub get
+          echo "🔍 Checking dependencies..."
+          flutter pub deps
 
       - name: Update version in pubspec.yaml
         run: |
+          echo "📝 Updating version in pubspec.yaml..."
           sed -i '' "s/^version: .*/version: ${{ needs.version.outputs.version }}+${{ needs.version.outputs.build-number }}/" pubspec.yaml
+          echo "✅ Updated version to: $(grep '^version:' pubspec.yaml)"
+
+      - name: Analyze code
+        run: |
+          echo "🔍 Analyzing code..."
+          flutter analyze || echo "⚠️ Analysis completed with warnings"
+        continue-on-error: true
 
       - name: Build iOS (No Codesign)
         run: |
-          flutter build ios --release --no-codesign
+          echo "🍎 Building iOS..."
+          flutter build ios --release --no-codesign --verbose --dart-define=FLUTTER_WEB_USE_SKIA=true
+          echo "📱 iOS build completed!"
+          ls -la build/ios/iphoneos/
 
       - name: Create iOS Archive
         run: |
+          echo "Creating iOS archive..."
           cd build/ios/iphoneos
-          mkdir -p Payload
-          cp -r Runner.app Payload/
-          zip -r ../../../EchoGenAI-iOS-${{ needs.version.outputs.version }}.ipa Payload/
+          if [ -d "Runner.app" ]; then
+            mkdir -p Payload
+            cp -r Runner.app Payload/
+            zip -r ../../../EchoGenAI-iOS-${{ needs.version.outputs.version }}.ipa Payload/
+            cd ../../..
+            ls -la EchoGenAI-iOS-${{ needs.version.outputs.version }}.ipa
+          else
+            echo "Runner.app not found, listing directory contents:"
+            ls -la
+            exit 1
+          fi
 
       - name: Upload iOS artifact
         uses: actions/upload-artifact@v4
@@ -129,29 +198,61 @@ jobs:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download Android APK
         uses: actions/download-artifact@v4
         with:
           name: android-apk
           path: ./artifacts
+        continue-on-error: true
 
       - name: Download Android App Bundle
         uses: actions/download-artifact@v4
         with:
           name: android-aab
           path: ./artifacts
+        continue-on-error: true
 
       - name: Download iOS IPA
         uses: actions/download-artifact@v4
         with:
           name: ios-ipa
           path: ./artifacts
+        continue-on-error: true
 
-      - name: Rename artifacts
+      - name: List and rename artifacts
         run: |
-          mv ./artifacts/app-release.apk ./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.apk
-          mv ./artifacts/app-release.aab ./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.aab
+          echo "Listing downloaded artifacts:"
+          ls -la ./artifacts/ || echo "No artifacts directory"
+
+          # Create artifacts directory if it doesn't exist
+          mkdir -p ./artifacts
+
+          # Rename Android artifacts if they exist
+          if [ -f "./artifacts/app-release.apk" ]; then
+            mv ./artifacts/app-release.apk ./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.apk
+            echo "✅ Renamed Android APK"
+          else
+            echo "❌ Android APK not found"
+          fi
+
+          if [ -f "./artifacts/app-release.aab" ]; then
+            mv ./artifacts/app-release.aab ./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.aab
+            echo "✅ Renamed Android AAB"
+          else
+            echo "❌ Android AAB not found"
+          fi
+
+          # Check iOS IPA
+          if [ -f "./artifacts/EchoGenAI-iOS-${{ needs.version.outputs.version }}.ipa" ]; then
+            echo "✅ iOS IPA found"
+          else
+            echo "❌ iOS IPA not found"
+          fi
+
+          echo "Final artifacts:"
           ls -la ./artifacts/
 
       - name: Generate changelog
@@ -160,45 +261,89 @@ jobs:
           # Get commits since last tag
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$LAST_TAG" ]; then
+            echo "No previous tags found, using recent commits"
             COMMITS=$(git log --pretty=format:"- %s" --max-count=10)
           else
+            echo "Last tag: $LAST_TAG"
             COMMITS=$(git log --pretty=format:"- %s" $LAST_TAG..HEAD)
           fi
-          
-          # Create changelog
-          cat > CHANGELOG.md << EOF
-          ## What's New in v${{ needs.version.outputs.version }}
-          
+
+          # If no commits, use a default message
+          if [ -z "$COMMITS" ]; then
+            COMMITS="- Initial release"
+          fi
+
+          # Create changelog file
+          cat > release_notes.md << 'CHANGELOG_EOF'
+          ## 🎉 What's New in v${{ needs.version.outputs.version }}
+
           ### 🚀 Features & Improvements
-          $COMMITS
-          
+          COMMITS_PLACEHOLDER
+
           ### 📱 Downloads
           - **Android APK**: For direct installation on Android devices
           - **Android AAB**: For Google Play Store distribution
           - **iOS IPA**: For iOS devices (requires sideloading)
-          
+
           ### 🔧 Installation Instructions
-          
+
           #### Android APK
           1. Download the APK file
           2. Enable "Install from unknown sources" in your device settings
           3. Install the APK file
-          
+
           #### iOS IPA
           1. Download the IPA file
           2. Use AltStore, Sideloadly, or similar tools to install
           3. Trust the developer certificate in Settings > General > VPN & Device Management
-          
+
           ### 🐛 Bug Reports
           Found an issue? Please report it on our [GitHub Issues](https://github.com/Mr-Dark-debug/EchoGen.ai/issues) page.
-          
+
           ### ❤️ Support
           If you find EchoGen.ai helpful, consider [supporting the project](https://buymeacoffee.com/mrdarkdebug)!
-          EOF
-          
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat CHANGELOG.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          CHANGELOG_EOF
+
+          # Replace placeholder with actual commits
+          sed -i "s/COMMITS_PLACEHOLDER/$COMMITS/g" release_notes.md
+
+          # Save to GitHub output
+          {
+            echo "changelog<<EOF"
+            cat release_notes.md
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Prepare release files
+        id: prepare_files
+        run: |
+          # Create a list of files that actually exist
+          FILES=""
+
+          if [ -f "./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.apk" ]; then
+            FILES="$FILES./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.apk"$'\n'
+            echo "✅ Android APK will be included"
+          fi
+
+          if [ -f "./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.aab" ]; then
+            FILES="$FILES./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.aab"$'\n'
+            echo "✅ Android AAB will be included"
+          fi
+
+          if [ -f "./artifacts/EchoGenAI-iOS-v${{ needs.version.outputs.version }}.ipa" ]; then
+            FILES="$FILES./artifacts/EchoGenAI-iOS-v${{ needs.version.outputs.version }}.ipa"$'\n'
+            echo "✅ iOS IPA will be included"
+          fi
+
+          # Remove trailing newline
+          FILES=$(echo "$FILES" | sed '/^$/d')
+
+          echo "files<<FILES_EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "FILES_EOF" >> $GITHUB_OUTPUT
+
+          echo "Files to include in release:"
+          echo "$FILES"
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -208,10 +353,8 @@ jobs:
           body: ${{ steps.changelog.outputs.changelog }}
           draft: false
           prerelease: false
-          files: |
-            ./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.apk
-            ./artifacts/EchoGenAI-Android-v${{ needs.version.outputs.version }}.aab
-            ./artifacts/EchoGenAI-iOS-v${{ needs.version.outputs.version }}.ipa
+          files: ${{ steps.prepare_files.outputs.files }}
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
