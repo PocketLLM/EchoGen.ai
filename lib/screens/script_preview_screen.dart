@@ -139,12 +139,13 @@ class _ScriptPreviewScreenState extends State<ScriptPreviewScreen> {
           children: [
             // Header Info
             Container(
-              padding: const EdgeInsets.all(16),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.primaryBlue.withOpacity(0.1),
-                    AppTheme.primaryLight.withOpacity(0.05),
+                    AppTheme.primaryBlue.withOpacity(0.15),
+                    AppTheme.primaryLight.withOpacity(0.08),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -164,38 +165,43 @@ class _ScriptPreviewScreenState extends State<ScriptPreviewScreen> {
                     style: AppTheme.headingMedium.copyWith(
                       color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 22,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    children: [
-                      _buildInfoChip(
-                        icon: Icons.category,
-                        label: widget.category,
-                        color: AppTheme.primaryBlue,
-                        isDarkMode: isDarkMode,
-                      ),
-                      _buildInfoChip(
-                        icon: Icons.people,
-                        label: '${widget.speaker1} & ${widget.speaker2}',
-                        color: AppTheme.secondaryGreen,
-                        isDarkMode: isDarkMode,
-                      ),
-                      _buildInfoChip(
-                        icon: Icons.text_fields,
-                        label: '${_getCharacterCount()} chars',
-                        color: AppTheme.primaryLight,
-                        isDarkMode: isDarkMode,
-                      ),
-                      _buildInfoChip(
-                        icon: Icons.access_time,
-                        label: '~${_getEstimatedDuration().inMinutes} min',
-                        color: AppTheme.secondaryOrange,
-                        isDarkMode: isDarkMode,
-                      ),
-                    ],
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    child: Wrap(
+                      alignment: WrapAlignment.start,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        _buildInfoChip(
+                          icon: Icons.category,
+                          label: widget.category,
+                          color: AppTheme.primaryBlue,
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildInfoChip(
+                          icon: Icons.people,
+                          label: '${widget.speaker1} & ${widget.speaker2}',
+                          color: AppTheme.secondaryGreen,
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildInfoChip(
+                          icon: Icons.text_fields,
+                          label: '${_getCharacterCount()} chars',
+                          color: AppTheme.primaryLight,
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildInfoChip(
+                          icon: Icons.access_time,
+                          label: '~${_getEstimatedDuration().inMinutes} min',
+                          color: AppTheme.secondaryOrange,
+                          isDarkMode: isDarkMode,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -244,40 +250,67 @@ class _ScriptPreviewScreenState extends State<ScriptPreviewScreen> {
                   ),
                 ),
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(Icons.close, color: Colors.white, size: 18),
-                      label: Text('Cancel'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.secondaryRed,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? AppTheme.surfaceDark : AppTheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDarkMode ? AppTheme.surfaceVariantDark : AppTheme.borderLight,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
-                      onPressed: _generatePodcast,
-                      icon: Icon(Icons.podcasts, color: Colors.white, size: 20),
-                      label: Text('Generate Podcast'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryBlue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Action buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () => Navigator.of(context).pop(),
+                                icon: Icon(Icons.close, size: 18, color: Colors.white),
+                                label: Text('Cancel'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.secondaryRed,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              flex: 2,
+                              child: ElevatedButton.icon(
+                                onPressed: _generatePodcast,
+                                icon: Icon(Icons.podcasts, color: Colors.white, size: 20),
+                                label: Text(
+                                  'Generate Podcast', 
+                                  style: TextStyle(
+                                    fontSize: 16, 
+                                    fontWeight: FontWeight.w600
+                                  )
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryBlue,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  elevation: 3,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+
+                      ],
                     ),
                   ),
                 ],
@@ -297,22 +330,30 @@ class _ScriptPreviewScreenState extends State<ScriptPreviewScreen> {
     required bool isDarkMode,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
           Text(
             label,
-            style: AppTheme.bodySmall.copyWith(
-              color: color,
+            style: AppTheme.bodyMedium.copyWith(
+              color: isDarkMode ? color.withOpacity(0.9) : color.withOpacity(0.8),
               fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
         ],

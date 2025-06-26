@@ -1,0 +1,56 @@
+name: Build & Release Echogenai
+
+on:
+  push:
+    tags:
+      - 'v*'   # Triggers only when a version tag like v0.0.1 is pushed
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK & Release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 🧱 Checkout code
+      uses: actions/checkout@v3
+
+    - name: 🔧 Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.22.0'
+        channel: 'stable'
+
+    - name: 📦 Install dependencies
+      run: flutter pub get
+
+    - name: 🏗️ Build APK
+      run: flutter build apk --release
+
+    - name: 🏷️ Extract version from pubspec.yaml
+      id: version
+      run: |
+        version=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
+        echo "version=$version" >> $GITHUB_OUTPUT
+
+    - name: 📁 Prepare output
+      run: |
+        mkdir -p release
+        cp build/app/outputs/flutter-apk/app-release.apk release/Echogenai_${{ steps.version.outputs.version }}.apk
+
+    - name: 🚀 Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: Echogenai ${{ steps.version.outputs.version }}
+        tag_name: ${{ github.ref_name }}
+        files: release/*.apk
+        body: |
+          🚀 **Echogenai** v${{ steps.version.outputs.version }} is now available!
+
+          **What's included:**
+          - ✅ Android APK: `Echogenai_${{ steps.version.outputs.version }}.apk`
+          - 🛠️ Built automatically via CI/CD
+
+          Download the APK and enjoy.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

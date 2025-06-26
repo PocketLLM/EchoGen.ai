@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path/path.dart' as path;
 
 class TTSService {
   static const String _geminiBaseUrl = 'https://generativelanguage.googleapis.com/v1beta';
@@ -93,34 +94,63 @@ class TTSService {
     required String provider,
     String speaker1Name = 'Speaker1',
     String speaker2Name = 'Speaker2',
+    String model = 'gemini-2.5-flash-preview-tts',
+    String languageCode = 'en-US',
   }) async {
-    if (provider.toLowerCase() == 'gemini') {
-      // Use Gemini's multi-speaker TTS for better quality
+    try {
+      print('🎙️ Starting podcast generation with provider: $provider');
+      print('🤖 Using model: $model');
+      print('📝 Script length: ${script.length} characters');
+      print('🗣️ Speaker 1: $speaker1Name ($speaker1Voice)');
+      print('🗣️ Speaker 2: $speaker2Name ($speaker2Voice)');
+      print('🌐 Language: $languageCode');
+
+      // For now, we only support Gemini multi-speaker TTS
+      if (provider.toLowerCase() != 'gemini') {
+        print('⚠️ Non-Gemini provider selected: $provider. Only Gemini is currently supported.');
+        throw Exception('Only Gemini TTS is available at this time. Other providers coming soon!');
+      }
+      
+      // Use Gemini's multi-speaker TTS
       return await _generateGeminiMultiSpeakerPodcast(
         script: script,
         speaker1Voice: speaker1Voice,
         speaker2Voice: speaker2Voice,
         speaker1Name: speaker1Name,
         speaker2Name: speaker2Name,
+        model: model,
+        languageCode: languageCode,
       );
-    } else {
-      // Use traditional segment-by-segment approach for other providers
-      final segments = _parseScript(script);
-      final audioSegments = <String>[];
-
-      for (final segment in segments) {
-        final voiceId = segment.speaker == 'Speaker 1' ? speaker1Voice : speaker2Voice;
-        final audioPath = await _generateAudioSegment(
-          text: segment.text,
-          voiceId: voiceId,
-          provider: provider,
-        );
-        audioSegments.add(audioPath);
-      }
-
-      final combinedAudioPath = await _combineAudioSegments(audioSegments);
-      return combinedAudioPath;
+    } catch (e) {
+      print('❌ Error generating podcast: $e');
+      rethrow;
     }
+  }
+
+  // Helper method to verify API key
+  Future<String> verifyGeminiApiKey() async {
+    print('🔍 Verifying Gemini API key access...');
+    
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Get API key from settings
+    final apiKey = prefs.getString('api_key_gemini');
+    
+    if (apiKey != null && apiKey.isNotEmpty) {
+      print('✅ Found API key: ${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}');
+    } else {
+      print('❌ No Gemini API key found');
+      throw Exception('Gemini API key not found. Please configure it in Settings > API Keys.');
+    }
+    
+    // Format check
+    if (!apiKey.startsWith('AIza') || apiKey.length < 20) {
+      print('❌ Gemini API key has incorrect format');
+      throw Exception('Invalid Gemini API key format. Keys should start with "AIza".');
+    }
+    
+    print('✅ API key verification complete');
+    return apiKey;
   }
 
   Future<String> _generateGeminiMultiSpeakerPodcast({
@@ -129,30 +159,42 @@ class TTSService {
     required String speaker2Voice,
     required String speaker1Name,
     required String speaker2Name,
+    String model = 'gemini-2.5-flash-preview-tts',
+    String languageCode = 'en-US',
   }) async {
+    // Use persistent HTTP client that can handle background state
+    final client = http.Client();
+    
     try {
       print('🎙️ Starting Gemini multi-speaker podcast generation...');
+      print('🤖 Using model: $model');
       print('📝 Script length: ${script.length} characters');
       print('🗣️ Speaker 1: $speaker1Name ($speaker1Voice)');
       print('🗣️ Speaker 2: $speaker2Name ($speaker2Voice)');
+      print('🌐 Language: $languageCode');
 
-      final prefs = await SharedPreferences.getInstance();
-      final apiKey = prefs.getString('gemini_api_key');
-
-      if (apiKey == null || apiKey.isEmpty) {
-        print('❌ Gemini API key not found');
-        throw Exception('Gemini API key not found. Please configure it in settings.');
-      }
+      // Use our verification helper to get a valid API key
+      final apiKey = await verifyGeminiApiKey();
 
       print('🔑 API key found, making request...');
-      final url = Uri.parse('$_geminiBaseUrl/models/gemini-2.5-flash-preview-tts:generateContent?key=$apiKey');
+      // Ensure API key is properly URL-encoded
+      final encodedApiKey = Uri.encodeQueryComponent(apiKey);
+      final url = Uri.parse('$_geminiBaseUrl/models/$model:generateContent?key=$encodedApiKey');
 
+      // Format the script to include a clear instruction for the TTS model
+      final formattedScript = '''
+TTS the following conversation between $speaker1Name and $speaker2Name:
+
+$script
+''';
+
+      // Prepare the request according to Gemini TTS documentation
       final requestBody = {
         'contents': [
           {
             'parts': [
               {
-                'text': script,
+                'text': formattedScript,
               }
             ]
           }
@@ -160,6 +202,7 @@ class TTSService {
         'generationConfig': {
           'responseModalities': ['AUDIO'],
           'speechConfig': {
+            'languageCode': languageCode,
             'multiSpeakerVoiceConfig': {
               'speakerVoiceConfigs': [
                 {
@@ -185,12 +228,21 @@ class TTSService {
       };
 
       print('📤 Sending request to Gemini TTS API...');
-      final response = await http.post(
+      // Use HTTP client that won't be interrupted by app going to background
+      final response = await client.post(
         url,
         headers: {
           'Content-Type': 'application/json',
+          'Keep-Alive': 'timeout=120, max=1000',
+          'Connection': 'keep-alive',
         },
         body: jsonEncode(requestBody),
+      ).timeout(
+        const Duration(minutes: 3),
+        onTimeout: () {
+          client.close();
+          throw Exception('Request timed out after 3 minutes. Please try with a shorter script or check your connection.');
+        },
       );
 
       print('📥 Response status: ${response.statusCode}');
@@ -198,428 +250,122 @@ class TTSService {
       if (response.statusCode == 200) {
         print('✅ Successful response from Gemini TTS');
         final responseData = jsonDecode(response.body);
-
-        if (responseData['candidates'] != null &&
-            responseData['candidates'].isNotEmpty &&
-            responseData['candidates'][0]['content'] != null &&
-            responseData['candidates'][0]['content']['parts'] != null &&
-            responseData['candidates'][0]['content']['parts'].isNotEmpty &&
-            responseData['candidates'][0]['content']['parts'][0]['inlineData'] != null) {
-
-          final audioData = responseData['candidates'][0]['content']['parts'][0]['inlineData']['data'];
-          print('🎵 Audio data received, size: ${audioData.length} characters (base64)');
-
-          final audioBytes = base64Decode(audioData);
-          print('🎵 Decoded audio size: ${audioBytes.length} bytes');
-
-          final directory = await _getDownloadDirectory();
-          final fileName = 'podcast_${DateTime.now().millisecondsSinceEpoch}.wav';
-          final filePath = '${directory.path}/$fileName';
-
-          final file = File(filePath);
-          await file.writeAsBytes(audioBytes);
-
-          print('💾 Audio saved to: $filePath');
-          print('✅ Podcast generation completed successfully!');
-
-          return filePath;
-        } else {
-          print('❌ Invalid response structure from Gemini TTS');
-          throw Exception('Invalid response structure from Gemini TTS API');
-        }
-      } else {
-        print('❌ API error: ${response.statusCode}');
-        print('❌ Response body: ${response.body}');
-        final errorData = jsonDecode(response.body);
-        throw Exception('Gemini TTS API error: ${errorData['error']['message'] ?? 'Unknown error'}');
-      }
-    } catch (e) {
-      print('❌ Error generating Gemini multi-speaker podcast: $e');
-      print('🔄 Falling back to mock implementation...');
-      // Fallback to mock implementation
-      return await _generateMockPodcast();
-    }
-  }
-
-  Future<String> _generateMockPodcast() async {
-    await Future.delayed(const Duration(seconds: 2));
-
-    final directory = await _getDownloadDirectory();
-    final fileName = 'podcast_${DateTime.now().millisecondsSinceEpoch}.wav';
-    final filePath = '${directory.path}/$fileName';
-
-    // Create a longer mock audio file (10 seconds)
-    final file = File(filePath);
-
-    final sampleRate = 24000;
-    final duration = 10; // 10 seconds
-    final numSamples = sampleRate * duration;
-    final dataSize = numSamples * 2;
-    final fileSize = 36 + dataSize;
-
-    final wavData = ByteData(44 + dataSize);
-
-    // WAV header
-    wavData.setUint32(0, 0x52494646, Endian.big); // "RIFF"
-    wavData.setUint32(4, fileSize, Endian.little);
-    wavData.setUint32(8, 0x57415645, Endian.big); // "WAVE"
-    wavData.setUint32(12, 0x666d7420, Endian.big); // "fmt "
-    wavData.setUint32(16, 16, Endian.little);
-    wavData.setUint16(20, 1, Endian.little);
-    wavData.setUint16(22, 1, Endian.little);
-    wavData.setUint32(24, sampleRate, Endian.little);
-    wavData.setUint32(28, sampleRate * 2, Endian.little);
-    wavData.setUint16(32, 2, Endian.little);
-    wavData.setUint16(34, 16, Endian.little);
-    wavData.setUint32(36, 0x64617461, Endian.big); // "data"
-    wavData.setUint32(40, dataSize, Endian.little);
-
-    // Fill with silence
-    for (int i = 44; i < 44 + dataSize; i++) {
-      wavData.setUint8(i, 0);
-    }
-
-    await file.writeAsBytes(wavData.buffer.asUint8List());
-
-    return filePath;
-  }
-
-  // New method that accepts speaker names
-  Future<String> generatePodcastAudio({
-    required List<ScriptSegment> segments,
-    required String speaker1Voice,
-    required String speaker2Voice,
-    required String provider,
-    required Function(double, String) onProgress,
-  }) async {
-    final audioSegments = <String>[];
-
-    for (int i = 0; i < segments.length; i++) {
-      final segment = segments[i];
-      final progress = (i + 1) / segments.length;
-      onProgress(progress, 'Generating audio for ${segment.speaker}...');
-
-      // For now, alternate between voices (in real implementation, match by speaker name)
-      final voiceId = i % 2 == 0 ? speaker1Voice : speaker2Voice;
-
-      final audioPath = await _generateAudioSegment(
-        text: segment.text,
-        voiceId: voiceId,
-        provider: provider,
-      );
-      audioSegments.add(audioPath);
-    }
-
-    onProgress(1.0, 'Combining audio segments...');
-    final combinedAudioPath = await _combineAudioSegments(audioSegments);
-
-    return combinedAudioPath;
-  }
-
-  // Parse script into segments with speaker names
-  List<ScriptSegment> parseScript(String script, String speaker1Name, String speaker2Name) {
-    final segments = <ScriptSegment>[];
-    final lines = script.split('\n');
-
-    String? currentSpeaker;
-    String currentText = '';
-
-    for (final line in lines) {
-      final trimmedLine = line.trim();
-
-      // Skip empty lines and title
-      if (trimmedLine.isEmpty ||
-          trimmedLine.toLowerCase().startsWith('title:') ||
-          trimmedLine.toLowerCase().startsWith('episode:') ||
-          trimmedLine.toLowerCase().startsWith('podcast:')) {
-        continue;
-      }
-
-      // Check if line starts with speaker name
-      if (trimmedLine.contains(':')) {
-        // Save previous segment if exists
-        if (currentSpeaker != null && currentText.isNotEmpty) {
-          segments.add(ScriptSegment(
-            speaker: currentSpeaker,
-            text: currentText.trim(),
-          ));
-        }
-
-        // Parse new speaker
-        final parts = trimmedLine.split(':');
-        if (parts.length >= 2) {
-          final speakerName = parts[0].trim();
-          currentText = parts.sublist(1).join(':').trim();
-
-          // Map speaker names to standardized names
-          if (speakerName.toLowerCase().contains(speaker1Name.toLowerCase()) ||
-              speakerName.toLowerCase() == speaker1Name.toLowerCase()) {
-            currentSpeaker = speaker1Name;
-          } else if (speakerName.toLowerCase().contains(speaker2Name.toLowerCase()) ||
-                     speakerName.toLowerCase() == speaker2Name.toLowerCase()) {
-            currentSpeaker = speaker2Name;
-          } else {
-            // Default assignment if speaker name doesn't match
-            currentSpeaker = speakerName;
-          }
-        }
-      } else {
-        // Continue current speaker's text
-        if (currentText.isNotEmpty) {
-          currentText += ' ';
-        }
-        currentText += trimmedLine;
-      }
-    }
-
-    // Add final segment
-    if (currentSpeaker != null && currentText.isNotEmpty) {
-      segments.add(ScriptSegment(
-        speaker: currentSpeaker,
-        text: currentText.trim(),
-      ));
-    }
-
-    return segments;
-  }
-
-  List<ScriptSegment> _parseScript(String script) {
-    final segments = <ScriptSegment>[];
-    final lines = script.split('\n');
-    
-    String? currentSpeaker;
-    String currentText = '';
-    
-    for (final line in lines) {
-      final trimmedLine = line.trim();
-      
-      // Skip empty lines and title
-      if (trimmedLine.isEmpty || trimmedLine.toLowerCase().startsWith('title:')) {
-        continue;
-      }
-      
-      // Check if line starts with speaker name
-      if (trimmedLine.contains(':')) {
-        // Save previous segment if exists
-        if (currentSpeaker != null && currentText.isNotEmpty) {
-          segments.add(ScriptSegment(
-            speaker: currentSpeaker,
-            text: currentText.trim(),
-          ));
-        }
+        print('💾 Response structure: ${responseData.keys}');
         
-        // Parse new speaker
-        final parts = trimmedLine.split(':');
-        if (parts.length >= 2) {
-          currentSpeaker = parts[0].trim();
-          currentText = parts.sublist(1).join(':').trim();
-        }
-      } else {
-        // Continue current speaker's text
-        if (currentText.isNotEmpty) {
-          currentText += ' ';
-        }
-        currentText += trimmedLine;
-      }
-    }
-    
-    // Add final segment
-    if (currentSpeaker != null && currentText.isNotEmpty) {
-      segments.add(ScriptSegment(
-        speaker: currentSpeaker,
-        text: currentText.trim(),
-      ));
-    }
-    
-    return segments;
-  }
-
-  Future<String> _generateAudioSegment({
-    required String text,
-    required String voiceId,
-    required String provider,
-  }) async {
-    switch (provider.toLowerCase()) {
-      case 'gemini':
-        return await _generateGeminiAudio(text, voiceId);
-      case 'openai':
-        return await _generateOpenAIAudio(text, voiceId);
-      case 'elevenlabs':
-        return await _generateElevenLabsAudio(text, voiceId);
-      default:
-        throw Exception('Unsupported TTS provider: $provider');
-    }
-  }
-
-  Future<String> _generateGeminiAudio(String text, String voiceId) async {
-    try {
-      // Get API key from shared preferences
-      final prefs = await SharedPreferences.getInstance();
-      final apiKey = prefs.getString('gemini_api_key');
-
-      if (apiKey == null || apiKey.isEmpty) {
-        throw Exception('Gemini API key not found. Please configure it in settings.');
-      }
-
-      // Prepare the request
-      final url = Uri.parse('$_geminiBaseUrl/models/gemini-2.5-flash-preview-tts:generateContent?key=$apiKey');
-
-      final requestBody = {
-        'contents': [
-          {
-            'parts': [
-              {
-                'text': text,
-              }
-            ]
-          }
-        ],
-        'generationConfig': {
-          'responseModalities': ['AUDIO'],
-          'speechConfig': {
-            'voiceConfig': {
-              'prebuiltVoiceConfig': {
-                'voiceName': voiceId,
-              }
-            }
-          }
-        }
-      };
-
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(requestBody),
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-
         // Extract audio data from response
         final audioData = responseData['candidates'][0]['content']['parts'][0]['inlineData']['data'];
-
+        
         // Decode base64 audio data
         final audioBytes = base64Decode(audioData);
-
-        // Get download directory based on user preference
+        
+        // Save the original WAV file
         final directory = await _getDownloadDirectory();
-        final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.wav';
-        final filePath = '${directory.path}/$fileName';
-
-        // Save audio file
-        final file = File(filePath);
-        await file.writeAsBytes(audioBytes);
-
-        return filePath;
+        final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+        final wavPath = '${directory.path}/podcast_$timestamp.wav';
+        
+        // Save audio file to preferred location
+        final wavFile = File(wavPath);
+        await wavFile.writeAsBytes(audioBytes);
+        print('📀 Original WAV podcast saved to: $wavPath');
+        
+        // Close HTTP client properly
+        client.close();
+        
+        // Return the WAV path (the primary format)
+        return wavPath;
       } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception('Gemini TTS API error: ${errorData['error']['message'] ?? 'Unknown error'}');
+        // Handle error response
+        print('❌ Error response: ${response.statusCode}');
+        print('❌ Error body: ${response.body}');
+        
+        // Extract error message from response if possible
+        String errorMessage = 'Unknown error';
+        try {
+          final errorData = jsonDecode(response.body);
+          errorMessage = errorData['error']['message'] ?? 'Unknown error';
+        } catch (e) {
+          errorMessage = 'Failed to parse error: ${response.body}';
+        }
+        
+        // Close HTTP client before throwing
+        client.close();
+        
+        throw Exception('Gemini TTS API error: $errorMessage');
       }
     } catch (e) {
-      print('Error generating Gemini audio: $e');
-      // Fallback to mock implementation for development
-      return await _generateMockAudio();
+      // Ensure client is closed even on errors
+      client.close();
+      
+      print('❌ Error generating Gemini multi-speaker podcast: $e');
+      throw Exception('Failed to generate podcast: $e');
     }
   }
 
   Future<Directory> _getDownloadDirectory() async {
     final prefs = await SharedPreferences.getInstance();
     final folderType = prefs.getString('download_folder_type') ?? 'app_documents';
+    Directory directory;
 
-    switch (folderType) {
-      case 'downloads':
-        // Try to get downloads directory
+    try {
+      switch (folderType) {
+        case 'downloads':
+          // Try to get downloads directory
+          directory = Directory('/storage/emulated/0/Download/EchoGenAI');
+          break;
+        case 'external':
+          // Try to get external storage
+          directory = Directory('/storage/emulated/0/EchoGenAI');
+          break;
+        case 'music':
+          // Try to get music directory
+          directory = Directory('/storage/emulated/0/Music/EchoGenAI');
+          break;
+        default:
+          // Use app documents directory as a reliable fallback
+          directory = await getApplicationDocumentsDirectory();
+      }
+      
+      // Ensure directory exists
+      if (!await directory.exists()) {
         try {
-          final directory = Directory('/storage/emulated/0/Download/EchoGenAI');
-          if (!await directory.exists()) {
-            await directory.create(recursive: true);
-          }
-          return directory;
+          await directory.create(recursive: true);
+          print('📁 Created directory: ${directory.path}');
         } catch (e) {
+          print('⚠️ Failed to create directory: $e');
           // Fallback to app documents
-          return await getApplicationDocumentsDirectory();
+          directory = await getApplicationDocumentsDirectory();
         }
-      case 'external':
-        // Try to get external storage
-        try {
-          final directory = Directory('/storage/emulated/0/EchoGenAI');
-          if (!await directory.exists()) {
-            await directory.create(recursive: true);
-          }
-          return directory;
-        } catch (e) {
-          // Fallback to app documents
-          return await getApplicationDocumentsDirectory();
-        }
-      case 'music':
-        // Try to get music directory
-        try {
-          final directory = Directory('/storage/emulated/0/Music/EchoGenAI');
-          if (!await directory.exists()) {
-            await directory.create(recursive: true);
-          }
-          return directory;
-        } catch (e) {
-          // Fallback to app documents
-          return await getApplicationDocumentsDirectory();
-        }
-      default:
-        return await getApplicationDocumentsDirectory();
+      }
+      
+      // Test write permissions by creating a test file
+      try {
+        final testFile = File('${directory.path}/test_permissions.txt');
+        await testFile.writeAsString('test');
+        await testFile.delete();
+        print('✅ Directory has write permissions: ${directory.path}');
+      } catch (e) {
+        print('⚠️ Directory lacks write permissions: $e');
+        // Fallback to app documents
+        directory = await getApplicationDocumentsDirectory();
+      }
+      
+      return directory;
+    } catch (e) {
+      print('⚠️ Error accessing storage: $e');
+      // Fallback to app documents
+      return await getApplicationDocumentsDirectory();
     }
   }
 
-  Future<String> _generateMockAudio() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    final directory = await _getDownloadDirectory();
-    final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.wav';
-    final filePath = '${directory.path}/$fileName';
-
-    // Create a mock audio file with some basic WAV header
-    final file = File(filePath);
-
-    // Create a simple WAV file with silence (44 bytes header + 1 second of silence at 24kHz)
-    final sampleRate = 24000;
-    final duration = 1; // 1 second
-    final numSamples = sampleRate * duration;
-    final dataSize = numSamples * 2; // 16-bit samples
-    final fileSize = 36 + dataSize;
-
-    final wavData = ByteData(44 + dataSize);
-
-    // WAV header
-    wavData.setUint32(0, 0x52494646, Endian.big); // "RIFF"
-    wavData.setUint32(4, fileSize, Endian.little);
-    wavData.setUint32(8, 0x57415645, Endian.big); // "WAVE"
-    wavData.setUint32(12, 0x666d7420, Endian.big); // "fmt "
-    wavData.setUint32(16, 16, Endian.little); // PCM format size
-    wavData.setUint16(20, 1, Endian.little); // PCM format
-    wavData.setUint16(22, 1, Endian.little); // Mono
-    wavData.setUint32(24, sampleRate, Endian.little); // Sample rate
-    wavData.setUint32(28, sampleRate * 2, Endian.little); // Byte rate
-    wavData.setUint16(32, 2, Endian.little); // Block align
-    wavData.setUint16(34, 16, Endian.little); // Bits per sample
-    wavData.setUint32(36, 0x64617461, Endian.big); // "data"
-    wavData.setUint32(40, dataSize, Endian.little); // Data size
-
-    // Fill with silence (zeros)
-    for (int i = 44; i < 44 + dataSize; i++) {
-      wavData.setUint8(i, 0);
-    }
-
-    await file.writeAsBytes(wavData.buffer.asUint8List());
-
-    return filePath;
-  }
+  // This method has been removed in favor of the actual implementation 
+  // using the Gemini TTS API
 
   Future<String> _generateOpenAIAudio(String text, String voiceId) async {
     // Mock implementation - in real app, would call OpenAI TTS API
     await Future.delayed(const Duration(milliseconds: 500));
     
     final directory = await getApplicationDocumentsDirectory();
-    final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.mp3';
+    final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.wav';
     final filePath = '${directory.path}/$fileName';
     
     // Create a mock audio file
@@ -634,7 +380,7 @@ class TTSService {
     await Future.delayed(const Duration(milliseconds: 500));
     
     final directory = await getApplicationDocumentsDirectory();
-    final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.mp3';
+    final fileName = 'audio_${DateTime.now().millisecondsSinceEpoch}.wav';
     final filePath = '${directory.path}/$fileName';
     
     // Create a mock audio file
@@ -649,7 +395,7 @@ class TTSService {
     await Future.delayed(const Duration(milliseconds: 300));
     
     final directory = await getApplicationDocumentsDirectory();
-    final fileName = 'podcast_${DateTime.now().millisecondsSinceEpoch}.mp3';
+    final fileName = 'podcast_${DateTime.now().millisecondsSinceEpoch}.wav';
     final filePath = '${directory.path}/$fileName';
     
     // Create a mock combined audio file

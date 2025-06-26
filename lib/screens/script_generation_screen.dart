@@ -51,6 +51,13 @@ CRITICAL REQUIREMENTS:
 2. Create ONLY dialogue between the two speakers - no explanations, descriptions, or meta-commentary
 3. Use the exact speaker names provided in the user prompt
 4. Generate 8-12 minutes of conversation content (approximately 1200-1800 words)
+5. Use voice styling instructions in parentheses before speaker lines to control tone, emotion and delivery
+
+VOICE STYLING:
+- Add voice style instructions in parentheses before important lines 
+- Example: "Speaker 1: (excitedly) This is amazing news!"
+- Use emotions like: cheerfully, excitedly, laughing, whispering, thoughtfully, sadly, dramatically
+- Don't overuse - add to 30-40% of lines at most for variety and emphasis
 
 CONVERSATION STYLE:
 - Light-hearted and fun with occasional humor and jokes
@@ -64,9 +71,10 @@ CONVERSATION STYLE:
 STRICT FORMAT:
 Title: [Your catchy title here]
 
-Speaker 1: [dialogue content only]
+Speaker 1: (emotion/tone) [dialogue content only]
 Speaker 2: [dialogue content only]
 Speaker 1: [dialogue content only]
+Speaker 2: (emotion/tone) [dialogue content only]
 ...
 
 IMPORTANT: Return ONLY the title and dialogue script. No background music, sound effects, production notes, or explanatory text.''',
@@ -81,6 +89,13 @@ CRITICAL REQUIREMENTS:
 2. Create ONLY dialogue between the two speakers - no explanations, descriptions, or meta-commentary
 3. Use the exact speaker names provided in the user prompt
 4. Generate 8-12 minutes of conversation content (approximately 1200-1800 words)
+5. Use voice styling instructions in parentheses before speaker lines to control tone and delivery
+
+VOICE STYLING:
+- Add voice style instructions in parentheses before important lines 
+- Example: "Speaker 1: (authoritatively) The evidence suggests three key findings."
+- Use professional tones like: authoritatively, informatively, analytically, thoughtfully, considerately
+- Don't overuse - add to 20-30% of lines where emphasis is needed
 
 CONVERSATION STYLE:
 - Thoughtful and analytical with deep insights
@@ -95,9 +110,10 @@ CONVERSATION STYLE:
 STRICT FORMAT:
 Title: [Your professional title here]
 
-Speaker 1: [dialogue content only]
+Speaker 1: (emotion/tone) [dialogue content only]
 Speaker 2: [dialogue content only]
 Speaker 1: [dialogue content only]
+Speaker 2: (emotion/tone) [dialogue content only]
 ...
 
 IMPORTANT: Return ONLY the title and dialogue script. No background music, sound effects, production notes, or explanatory text.''',
@@ -112,6 +128,14 @@ CRITICAL REQUIREMENTS:
 2. Create ONLY dialogue between the two speakers - no explanations, descriptions, or meta-commentary
 3. Use the exact speaker names provided in the user prompt
 4. Generate 8-12 minutes of conversation content (approximately 1200-1800 words)
+5. Use voice styling instructions in parentheses to control tone and create suspense
+
+VOICE STYLING:
+- Add voice style instructions in parentheses before important lines 
+- Example: "Speaker 1: (in a hushed voice) The evidence disappeared overnight."
+- Use tones like: mysteriously, urgently, suspiciously, cautiously, contemplatively, pensively 
+- Use voice styling to build tension and create atmosphere
+- Don't overuse - add to 30-40% of lines for dramatic effect
 
 CONVERSATION STYLE:
 - Mysterious and intriguing with a sense of discovery
@@ -126,9 +150,10 @@ CONVERSATION STYLE:
 STRICT FORMAT:
 Title: [Your investigative title here]
 
-Speaker 1: [dialogue content only]
+Speaker 1: (emotion/tone) [dialogue content only]
 Speaker 2: [dialogue content only]
 Speaker 1: [dialogue content only]
+Speaker 2: (emotion/tone) [dialogue content only]
 ...
 
 IMPORTANT: Return ONLY the title and dialogue script. No background music, sound effects, production notes, or explanatory text.''',
@@ -143,6 +168,14 @@ CRITICAL REQUIREMENTS:
 2. Create ONLY dialogue between the two speakers - no explanations, descriptions, or meta-commentary
 3. Use the exact speaker names provided in the user prompt
 4. Generate 8-12 minutes of conversation content (approximately 1200-1800 words)
+5. Use voice styling instructions in parentheses to create a warm, relaxed atmosphere
+
+VOICE STYLING:
+- Add voice style instructions in parentheses before important lines 
+- Example: "Speaker 1: (warmly) I've been thinking about what you said last week."
+- Use tones like: warmly, softly, casually, reflecting, chuckling, smiling, nostalgically
+- Create a relaxed, authentic conversational feel
+- Don't overuse - add to 30-40% of lines for natural flow
 
 CONVERSATION STYLE:
 - Warm, intimate, and conversational
@@ -157,9 +190,10 @@ CONVERSATION STYLE:
 STRICT FORMAT:
 Title: [Your warm, friendly title here]
 
-Speaker 1: [dialogue content only]
+Speaker 1: (emotion/tone) [dialogue content only]
 Speaker 2: [dialogue content only]
 Speaker 1: [dialogue content only]
+Speaker 2: (emotion/tone) [dialogue content only]
 ...
 
 IMPORTANT: Return ONLY the title and dialogue script. No background music, sound effects, production notes, or explanatory text.''',
@@ -174,6 +208,14 @@ CRITICAL REQUIREMENTS:
 2. Create ONLY dialogue between the two speakers - no explanations, descriptions, or meta-commentary
 3. Use the exact speaker names provided in the user prompt
 4. Generate 8-12 minutes of conversation content (approximately 1200-1800 words)
+5. Use voice styling instructions in parentheses for tech enthusiasm and clarity
+
+VOICE STYLING:
+- Add voice style instructions in parentheses before important lines 
+- Example: "Speaker 1: (enthusiastically) This new technology changes everything!"
+- Use tones like: enthusiastically, clearly, thoughtfully, technically, excitedly, knowledgeably
+- Use voice styling to emphasize key technical points and innovations
+- Don't overuse - add to 25-35% of lines for emphasis on key points
 
 CONVERSATION STYLE:
 - Technical but accessible to general audience
@@ -188,9 +230,10 @@ CONVERSATION STYLE:
 STRICT FORMAT:
 Title: [Your tech-focused title here]
 
-Speaker 1: [dialogue content only]
+Speaker 1: (emotion/tone) [dialogue content only]
 Speaker 2: [dialogue content only]
 Speaker 1: [dialogue content only]
+Speaker 2: (emotion/tone) [dialogue content only]
 ...
 
 IMPORTANT: Return ONLY the title and dialogue script. No background music, sound effects, production notes, or explanatory text.''',
@@ -205,6 +248,14 @@ CRITICAL REQUIREMENTS:
 2. Create ONLY dialogue between the two speakers - no explanations, descriptions, or meta-commentary
 3. Use the exact speaker names provided in the user prompt
 4. Generate 8-12 minutes of conversation content (approximately 1200-1800 words)
+5. Use voice styling instructions in parentheses for dramatic storytelling effect
+
+VOICE STYLING:
+- Add voice style instructions in parentheses before important lines 
+- Example: "Speaker 1: (dramatically) The door creaked open revealing a forgotten world."
+- Use tones like: dramatically, whispering, suspensefully, emotionally, passionately, reminiscently
+- Use voice styling to enhance dramatic moments and create atmosphere
+- Don't overuse - add to 40-50% of lines for maximum narrative impact
 
 CONVERSATION STYLE:
 - Narrative-driven with compelling story arcs
@@ -219,9 +270,10 @@ CONVERSATION STYLE:
 STRICT FORMAT:
 Title: [Your storytelling title here]
 
-Speaker 1: [dialogue content only]
+Speaker 1: (emotion/tone) [dialogue content only]
 Speaker 2: [dialogue content only]
 Speaker 1: [dialogue content only]
+Speaker 2: (emotion/tone) [dialogue content only]
 ...
 
 IMPORTANT: Return ONLY the title and dialogue script. No background music, sound effects, production notes, or explanatory text.''',

@@ -10,6 +10,12 @@ android {
     compileSdk = 35
     ndkVersion = "27.0.12077973"
 
+    packagingOptions {
+        jniLibs {
+            pickFirsts.add("**/libc++_shared.so")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -24,10 +30,18 @@ android {
         applicationId = "com.example.echogenai"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 21
-        targetSdk = 34
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
+        
+        // Added for FFmpeg support
+        ndk {
+            abiFilters.add("armeabi-v7a")
+            abiFilters.add("arm64-v8a")
+            abiFilters.add("x86")
+            abiFilters.add("x86_64")
+        }
     }
 
     buildTypes {
