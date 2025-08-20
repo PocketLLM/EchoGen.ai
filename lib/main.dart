@@ -6,6 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:echogenai/providers/theme_provider.dart';
 import 'package:echogenai/services/global_audio_manager.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
+import 'package:echogenai/services/audio_handler.dart';
 
 void main() async {
   // Catch any errors that occur during app startup
@@ -34,6 +37,32 @@ void main() async {
     // Initialize theme provider
     final themeProvider = ThemeProvider();
     await themeProvider.initialize();
+
+    // Initialize audio session
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.music());
+    } catch (e) {
+      print('Warning: Audio session initialization failed: $e');
+    }
+
+    // Initialize audio service
+    late EchoGenAudioHandler audioHandler;
+    try {
+      audioHandler = await AudioService.init(
+        builder: () => EchoGenAudioHandler(),
+        config: const AudioServiceConfig(
+          androidNotificationChannelId: 'com.example.echogenai.channel.audio',
+          androidNotificationChannelName: 'EchoGen.ai Audio',
+          androidNotificationOngoing: true,
+          androidShowNotificationBadge: true,
+        ),
+      );
+    } catch (e) {
+      print('Warning: Audio service initialization failed: $e');
+      // Fallback to basic audio handler
+      audioHandler = EchoGenAudioHandler();
+    }
 
     // Initialize global audio manager
     try {

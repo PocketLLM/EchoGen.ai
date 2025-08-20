@@ -1154,52 +1154,63 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
           color: AppTheme.primaryBlue.withOpacity(0.2),
         ),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Left speeds (0.25x, 0.5x)
-            ..._speedOptions.where((speed) => speed < 1.0).map((speed) =>
-              _buildSpeedOption(speed, isDarkMode)
-            ).toList(),
-
-            // Current speed (center)
-            GestureDetector(
-              onTap: _toggleSpeedControl,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryBlue,
-                  borderRadius: BorderRadius.circular(15),
-                ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: IntrinsicWidth(
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Icon(
-                      Icons.speed,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${_playbackSpeed}x',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                    // Left speeds (0.25x, 0.5x)
+                    ..._speedOptions.where((speed) => speed < 1.0).map((speed) =>
+                      Flexible(child: _buildSpeedOption(speed, isDarkMode))
+                    ).toList(),
+
+                    // Current speed (center)
+                    Flexible(
+                      child: GestureDetector(
+                        onTap: _toggleSpeedControl,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryBlue,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.speed,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${_playbackSpeed}x',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
+
+                    // Right speeds (1.25x, 1.5x)
+                    ..._speedOptions.where((speed) => speed > 1.0).map((speed) =>
+                      Flexible(child: _buildSpeedOption(speed, isDarkMode))
+                    ).toList(),
                   ],
                 ),
               ),
             ),
-
-            // Right speeds (1.25x, 1.5x)
-            ..._speedOptions.where((speed) => speed > 1.0).map((speed) =>
-              _buildSpeedOption(speed, isDarkMode)
-            ).toList(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

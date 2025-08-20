@@ -118,7 +118,7 @@ class _MiniPlayerWidgetState extends State<MiniPlayerWidget> with TickerProvider
       position: _slideAnimation,
       child: Container(
         height: 80,
-        margin: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
         decoration: BoxDecoration(
           color: isDarkMode ? AppTheme.surfaceDark : AppTheme.surface,
           borderRadius: BorderRadius.circular(16),

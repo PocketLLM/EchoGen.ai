@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'package:just_audio/just_audio.dart';
 import 'package:echogenai/services/storage_service.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
+import 'audio_handler.dart';
 
 class GlobalAudioManager {
   static GlobalAudioManager? _instance;
@@ -10,6 +13,7 @@ class GlobalAudioManager {
   GlobalAudioManager._();
 
   AudioPlayer? _audioPlayer;
+  EchoGenAudioHandler? _audioHandler;
   GeneratedPodcast? _currentPodcast;
 
   final StreamController<bool> _isPlayingController = StreamController<bool>.broadcast();

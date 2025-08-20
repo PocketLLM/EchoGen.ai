@@ -88,6 +88,8 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
   double _generationProgress = 0.0;
   String _currentStep = '';
   bool _keepConnectionAlive = false;
+  int _totalChunks = 1;
+  int _completedChunks = 0;
 
   @override
   void initState() {
@@ -231,14 +233,21 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
         _currentStep = 'Warming up the vocal cords 🎤';
       });
 
-      // Step 3: Generate audio (this is the main step)
+      // Step 3: Calculate chunks and generate audio
+      const maxChunkSize = 6000;
+      _totalChunks = widget.script.length <= maxChunkSize ? 1 :
+          (widget.script.length / maxChunkSize).ceil();
+      _completedChunks = 0;
+
       setState(() {
         _generationProgress = 0.35;
-        _currentStep = 'Bringing ${widget.speaker1} and ${widget.speaker2} to life 🎭';
+        _currentStep = _totalChunks > 1
+            ? 'Preparing ${_totalChunks} chunks for ${widget.speaker1} and ${widget.speaker2} 🎭'
+            : 'Bringing ${widget.speaker1} and ${widget.speaker2} to life 🎭';
       });
 
-      // Generate the actual podcast with speaker names
-      final podcastPath = await _ttsService.generatePodcast(
+      // Generate the actual podcast with speaker names and progress tracking
+      final podcastPath = await _ttsService.generatePodcastWithProgress(
         script: widget.script,
         speaker1Voice: _selectedSpeaker1Voice!,
         speaker2Voice: _selectedSpeaker2Voice!,
@@ -247,6 +256,18 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
         speaker2Name: widget.speaker2,
         model: _selectedModel,
         languageCode: _selectedLanguageCode,
+        onProgress: (chunkIndex, totalChunks) {
+          _completedChunks = chunkIndex;
+          final chunkProgress = chunkIndex / totalChunks;
+          final overallProgress = 0.35 + (chunkProgress * 0.5); // 35% to 85%
+
+          setState(() {
+            _generationProgress = overallProgress;
+            _currentStep = totalChunks > 1
+                ? 'Processing chunk ${chunkIndex}/${totalChunks} - ${(chunkProgress * 100).toInt()}% 🎙️'
+                : 'Bringing ${widget.speaker1} and ${widget.speaker2} to life 🎭';
+          });
+        },
       );
 
       // Step 4: Processing audio
@@ -528,75 +549,57 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
                 
                 const SizedBox(height: 40),
                 
-                // Progress Indicator - Enhanced with pulsing and more visual effects
+                // Progress Display - Percentage only
                 Container(
-                  width: double.infinity,
-                  height: 16,
-                  padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   decoration: BoxDecoration(
-                    color: isDarkMode ? AppTheme.surfaceVariantDark : AppTheme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.primaryBlue.withOpacity(0.1),
+                        AppTheme.primaryLight.withOpacity(0.15),
+                      ],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppTheme.primaryBlue.withOpacity(0.2),
+                    ),
                   ),
-                  child: Stack(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Main progress bar
-                      FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: _generationProgress,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [AppTheme.primaryBlue, AppTheme.primaryLight],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryBlue.withOpacity(0.3),
-                                blurRadius: 4,
-                                spreadRadius: 0,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
+                      Icon(
+                        Icons.percent,
+                        color: AppTheme.primaryBlue,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${(_generationProgress * 100).toInt()}%',
+                        style: AppTheme.headingMedium.copyWith(
+                          color: AppTheme.primaryBlue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 28,
                         ),
                       ),
-                      
-                      // Animated glow at progress edge
-                      if (_generationProgress > 0.05 && _generationProgress < 0.98)
-                        Positioned(
-                          left: MediaQuery.of(context).size.width * 0.8 * _generationProgress - 35,
-                          top: -4,
-                          child: AnimatedBuilder(
-                            animation: _pulseAnimation,
-                            builder: (context, child) {
-                              return Container(
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(0.1 + (0.1 * _pulseAnimation.value)),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppTheme.primaryBlue.withOpacity(0.3 + (0.1 * _pulseAnimation.value)),
-                                      blurRadius: 10,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
+                      if (_totalChunks > 1) ...[
+                        const SizedBox(width: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.secondaryOrange.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Chunk $_completedChunks/$_totalChunks',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.secondaryOrange,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ),

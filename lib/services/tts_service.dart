@@ -98,6 +98,29 @@ class TTSService {
     String model = 'gemini-2.5-flash-preview-tts',
     String languageCode = 'en-US',
   }) async {
+    return generatePodcastWithProgress(
+      script: script,
+      speaker1Voice: speaker1Voice,
+      speaker2Voice: speaker2Voice,
+      provider: provider,
+      speaker1Name: speaker1Name,
+      speaker2Name: speaker2Name,
+      model: model,
+      languageCode: languageCode,
+    );
+  }
+
+  Future<String> generatePodcastWithProgress({
+    required String script,
+    required String speaker1Voice,
+    required String speaker2Voice,
+    required String provider,
+    String speaker1Name = 'Speaker1',
+    String speaker2Name = 'Speaker2',
+    String model = 'gemini-2.5-flash-preview-tts',
+    String languageCode = 'en-US',
+    Function(int chunkIndex, int totalChunks)? onProgress,
+  }) async {
     try {
       print('🎙️ Starting podcast generation with provider: $provider');
       print('🤖 Using model: $model');
@@ -121,6 +144,7 @@ class TTSService {
         speaker2Name: speaker2Name,
         model: model,
         languageCode: languageCode,
+        onProgress: onProgress,
       );
     } catch (e) {
       print('❌ Error generating podcast: $e');
@@ -162,6 +186,7 @@ class TTSService {
     required String speaker2Name,
     String model = 'gemini-2.5-flash-preview-tts',
     String languageCode = 'en-US',
+    Function(int chunkIndex, int totalChunks)? onProgress,
   }) async {
     try {
       print('🎙️ Starting Gemini multi-speaker podcast generation...');
@@ -179,6 +204,8 @@ class TTSService {
 
       if (script.length <= maxChunkSize) {
         print('📝 Script is within size limit, processing as single chunk');
+        // Call progress callback for single chunk
+        onProgress?.call(1, 1);
         return await _generateSingleChunk(
           script: script,
           speaker1Voice: speaker1Voice,
@@ -201,6 +228,7 @@ class TTSService {
           languageCode: languageCode,
           apiKey: apiKey,
           maxChunkSize: maxChunkSize,
+          onProgress: onProgress,
         );
       }
     } catch (e) {
@@ -385,6 +413,7 @@ $script
     required String languageCode,
     required String apiKey,
     required int maxChunkSize,
+    Function(int chunkIndex, int totalChunks)? onProgress,
   }) async {
     try {
       print('🔄 Starting chunked podcast generation...');
@@ -397,6 +426,9 @@ $script
 
       for (int i = 0; i < chunks.length; i++) {
         print('🎙️ Processing chunk ${i + 1}/${chunks.length}...');
+
+        // Call progress callback
+        onProgress?.call(i + 1, chunks.length);
 
         // Generate audio for this chunk
         final chunkAudioPath = await _generateSingleChunk(
