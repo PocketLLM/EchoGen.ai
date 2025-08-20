@@ -53,11 +53,14 @@ CRITICAL REQUIREMENTS:
 4. Generate 8-12 minutes of conversation content (approximately 1200-1800 words)
 5. Use voice styling instructions in parentheses before speaker lines to control tone, emotion and delivery
 
-VOICE STYLING:
-- Add voice style instructions in parentheses before important lines 
+VOICE STYLING (CRITICAL - READ CAREFULLY):
+- Add voice style instructions in parentheses ONLY for TTS tone guidance
 - Example: "Speaker 1: (excitedly) This is amazing news!"
+- These emotions in parentheses are NEVER spoken aloud - they guide voice tone only
+- The TTS system reads ONLY the dialogue after the parentheses
 - Use emotions like: cheerfully, excitedly, laughing, whispering, thoughtfully, sadly, dramatically
 - Don't overuse - add to 30-40% of lines at most for variety and emphasis
+- REMEMBER: (emotion) = tone guidance, dialogue = what's actually spoken
 
 CONVERSATION STYLE:
 - Light-hearted and fun with occasional humor and jokes
@@ -91,11 +94,14 @@ CRITICAL REQUIREMENTS:
 4. Generate 8-12 minutes of conversation content (approximately 1200-1800 words)
 5. Use voice styling instructions in parentheses before speaker lines to control tone and delivery
 
-VOICE STYLING:
-- Add voice style instructions in parentheses before important lines 
+VOICE STYLING (CRITICAL - READ CAREFULLY):
+- Add voice style instructions in parentheses ONLY for TTS tone guidance
 - Example: "Speaker 1: (authoritatively) The evidence suggests three key findings."
+- These emotions in parentheses are NEVER spoken aloud - they guide voice tone only
+- The TTS system reads ONLY the dialogue after the parentheses
 - Use professional tones like: authoritatively, informatively, analytically, thoughtfully, considerately
 - Don't overuse - add to 20-30% of lines where emphasis is needed
+- REMEMBER: (emotion) = tone guidance, dialogue = what's actually spoken
 
 CONVERSATION STYLE:
 - Thoughtful and analytical with deep insights
@@ -130,12 +136,15 @@ CRITICAL REQUIREMENTS:
 4. Generate 8-12 minutes of conversation content (approximately 1200-1800 words)
 5. Use voice styling instructions in parentheses to control tone and create suspense
 
-VOICE STYLING:
-- Add voice style instructions in parentheses before important lines 
+VOICE STYLING (CRITICAL - READ CAREFULLY):
+- Add voice style instructions in parentheses ONLY for TTS tone guidance
 - Example: "Speaker 1: (in a hushed voice) The evidence disappeared overnight."
-- Use tones like: mysteriously, urgently, suspiciously, cautiously, contemplatively, pensively 
+- These emotions in parentheses are NEVER spoken aloud - they guide voice tone only
+- The TTS system reads ONLY the dialogue after the parentheses
+- Use tones like: mysteriously, urgently, suspiciously, cautiously, contemplatively, pensively
 - Use voice styling to build tension and create atmosphere
 - Don't overuse - add to 30-40% of lines for dramatic effect
+- REMEMBER: (emotion) = tone guidance, dialogue = what's actually spoken
 
 CONVERSATION STYLE:
 - Mysterious and intriguing with a sense of discovery
@@ -170,12 +179,15 @@ CRITICAL REQUIREMENTS:
 4. Generate 8-12 minutes of conversation content (approximately 1200-1800 words)
 5. Use voice styling instructions in parentheses to create a warm, relaxed atmosphere
 
-VOICE STYLING:
-- Add voice style instructions in parentheses before important lines 
+VOICE STYLING (CRITICAL - READ CAREFULLY):
+- Add voice style instructions in parentheses ONLY for TTS tone guidance
 - Example: "Speaker 1: (warmly) I've been thinking about what you said last week."
+- These emotions in parentheses are NEVER spoken aloud - they guide voice tone only
+- The TTS system reads ONLY the dialogue after the parentheses
 - Use tones like: warmly, softly, casually, reflecting, chuckling, smiling, nostalgically
 - Create a relaxed, authentic conversational feel
 - Don't overuse - add to 30-40% of lines for natural flow
+- REMEMBER: (emotion) = tone guidance, dialogue = what's actually spoken
 
 CONVERSATION STYLE:
 - Warm, intimate, and conversational

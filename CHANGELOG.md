@@ -12,6 +12,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive issue and PR templates
 - Version bump automation
 
+## [0.2.0] - 2025-01-20
+
+### 🎨 Major UI/UX Improvements
+
+#### Enhanced Player Screen
+- **Spinning Logo Animation**: Logo now smoothly rotates during audio playback for visual feedback
+- **Improved Forward/Backward Buttons**: Enhanced visibility with gradient backgrounds, better icons, and improved styling
+- **Horizontal Speed Control**: Speed control now expands horizontally showing all options (0.25x, 0.5x, 0.75x, 1.0x, 1.25x, 1.5x, 2.0x)
+- **Transcript Slide View**: Swipe right from player to access full transcript view with mini player controls
+- **Removed Audio Wave**: Cleaned up interface by removing the audio wave visualization
+- **Darker Progress Bar**: Enhanced progress bar background for better visibility
+
+#### Page Navigation
+- **Swipeable Interface**: Seamless page navigation between player and transcript views
+- **Page Indicators**: Visual dots showing current page with swipe hints
+- **Mini Player**: Compact player controls in transcript view for continuous playback control
+
+### 🖼️ AI-Powered Cover Art Generation
+
+#### ImageRouter Integration
+- **Custom Cover Art**: Generate AI-powered podcast cover art using ImageRouter API
+- **Multiple AI Models**: Support for DALL-E 3, Stable Diffusion XL, Midjourney, and more
+- **Model Selection**: User-selectable AI models with descriptions and capabilities
+- **Quality Options**: Choose from auto, low, medium, and high quality settings
+- **Size Options**: Multiple aspect ratios (512x512, 1024x1024, 1024x1792, 1792x1024)
+- **API Key Management**: Secure storage and validation of ImageRouter API keys
+- **Enhanced Prompts**: Automatically optimized prompts for podcast cover art generation
+- **Local Storage**: Generated images saved locally for offline access
+- **Preview & Edit**: Preview generated covers and regenerate with different settings
+
+### 🎭 Enhanced Script Generation
+
+#### Improved Emotion Handling
+- **Tone Guidance System**: Emotions in parentheses now clearly marked as TTS tone guidance only
+- **Never Spoken Aloud**: Emotion indicators are used for voice inflection but not read in audio
+- **Enhanced Prompts**: All script categories updated with clear emotion handling instructions
+- **Better Documentation**: Comprehensive guidance for AI on emotion vs. dialogue separation
+
+### 🔧 Technical Improvements
+- **HTTP Support**: Enhanced API communications
+- **Shared Preferences**: Improved settings and API key storage
+- **Path Provider**: Better file management for generated content
+- **Error Handling**: Comprehensive error handling across all new features
+- **Performance**: Optimized animations and UI rendering
+
+### 🐛 Bug Fixes
+- **Animation Performance**: Improved logo animation performance
+- **UI Consistency**: Fixed various UI inconsistencies across screens
+- **Memory Leaks**: Resolved potential memory leaks in animation controllers
+- **Error States**: Better error state handling and user feedback
+
 ## [1.0.0] - 2024-12-19
 
 ### Added

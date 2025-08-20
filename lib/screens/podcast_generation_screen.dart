@@ -5,6 +5,8 @@ import 'package:echogenai/widgets/app_bar_widget.dart';
 import 'package:echogenai/services/storage_service.dart';
 import 'package:echogenai/services/tts_service.dart';
 import 'package:echogenai/services/ai_service.dart';
+import 'package:echogenai/screens/cover_art_generation_screen.dart';
+import 'dart:io';
 import 'package:echogenai/screens/podcast_player_screen.dart';
 import 'dart:io';
 
@@ -48,6 +50,7 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
   String? _selectedSpeaker2Voice;
   String _selectedModel = 'gemini-2.5-flash-preview-tts'; // Default model
   String _selectedLanguageCode = 'en-US'; // Default language
+  String? _customCoverArtPath; // Path to custom generated cover art
   
   // Available models
   final List<Map<String, dynamic>> _availableModels = [
@@ -282,6 +285,7 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
           'script': widget.script, // Store the script in metadata for reference
           'audioFormat': 'wav', // Store the correct format for better compatibility
           'language': _selectedLanguageCode, // Store selected language
+          'customCoverArt': _customCoverArtPath, // Store custom cover art path if generated
         },
       );
 
@@ -392,7 +396,11 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
             // Voice Selection
             _buildVoiceSelection(isDarkMode),
             const SizedBox(height: 24),
-            
+
+            // Cover Art Section
+            _buildCoverArtSection(isDarkMode),
+            const SizedBox(height: 24),
+
             // Generate Button
             _buildGenerateButton(isDarkMode),
             
@@ -1194,6 +1202,176 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildCoverArtSection(bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.secondaryGreen.withOpacity(0.1),
+            AppTheme.secondaryGreen.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.secondaryGreen.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.image,
+                color: AppTheme.secondaryGreen,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Custom Cover Art',
+                style: AppTheme.titleMedium.copyWith(
+                  color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'Optional',
+                style: AppTheme.bodySmall.copyWith(
+                  color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Generate AI-powered cover art for your podcast using ImageRouter',
+            style: AppTheme.bodyMedium.copyWith(
+              color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          if (_customCoverArtPath != null) ...[
+            // Show preview of generated cover art
+            Container(
+              height: 100,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.secondaryGreen.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      bottomLeft: Radius.circular(12),
+                    ),
+                    child: Image.file(
+                      File(_customCoverArtPath!),
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 100,
+                          height: 100,
+                          color: Colors.grey[300],
+                          child: Icon(Icons.error, color: Colors.grey[600]),
+                        );
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Custom Cover Art',
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'AI-generated cover art ready to use',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _customCoverArtPath = null;
+                      });
+                    },
+                    icon: Icon(
+                      Icons.close,
+                      color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          OutlinedButton.icon(
+            onPressed: () => _openCoverArtGeneration(),
+            icon: Icon(
+              _customCoverArtPath != null ? Icons.edit : Icons.auto_awesome,
+              size: 20,
+            ),
+            label: Text(_customCoverArtPath != null ? 'Edit Cover Art' : 'Generate Cover Art'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.secondaryGreen,
+              side: BorderSide(color: AppTheme.secondaryGreen),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openCoverArtGeneration() async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => CoverArtGenerationScreen(
+          podcastTitle: widget.sourceTitle,
+          existingCoverPath: _customCoverArtPath,
+          onCoverArtGenerated: (path) {
+            setState(() {
+              _customCoverArtPath = path;
+            });
+          },
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _customCoverArtPath = result;
+      });
+    }
   }
 
   Widget _buildGenerateButton(bool isDarkMode) {

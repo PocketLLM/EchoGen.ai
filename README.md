@@ -48,6 +48,22 @@ EchoGen.ai is a powerful, open-source Flutter application that transforms any we
 ### 🎙️ Text-to-Speech Generation
 - **30+ Voices**: Access to Google's premium TTS voices
 - **Multi-Speaker**: Realistic conversations between different speakers
+- **Emotion Guidance**: Advanced tone control for natural-sounding dialogue
+- **Speed Control**: Variable playback speeds (0.25x to 2.0x)
+
+### 🖼️ AI-Powered Cover Art Generation ✨ NEW in v0.2.0
+- **ImageRouter Integration**: Generate custom podcast cover art using AI
+- **Multiple AI Models**: Support for DALL-E 3, Stable Diffusion XL, Midjourney
+- **Quality Options**: Choose from auto, low, medium, and high quality
+- **Size Options**: Multiple aspect ratios for different platforms
+- **Local Storage**: Generated covers saved locally for offline access
+
+### 🎨 Enhanced Player Experience ✨ NEW in v0.2.0
+- **Spinning Logo Animation**: Visual feedback during playback
+- **Transcript Slide View**: Swipe to access full transcript with mini player
+- **Horizontal Speed Control**: Expanded speed options with visual selection
+- **Improved Controls**: Enhanced forward/backward buttons with better visibility
+- **Page Navigation**: Seamless swipe navigation between player and transcript
 - **High Quality**: Professional-grade audio output
 - **Custom Settings**: Adjust speed, tone, and speaking style
 

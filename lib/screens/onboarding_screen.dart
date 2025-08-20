@@ -69,7 +69,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 backgroundColor: AppTheme.onboardingRed,
                 title: 'Create podcasts with AI',
                 description: 'Transform articles, audio uploads, or text prompts into professional podcasts',
-                assetPath: 'lib/assets/mic_icon.png',
+                assetPath: 'lib/assets/ai.png',
                 isSvg: false,
               ),
               _OnboardingPage(

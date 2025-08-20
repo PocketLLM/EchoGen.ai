@@ -25,10 +25,8 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
     with TickerProviderStateMixin {
 
   late AnimationController _playButtonController;
-  late AnimationController _waveController;
   late AnimationController _logoSpinController;
   late Animation<double> _playButtonAnimation;
-  late Animation<double> _waveAnimation;
   late Animation<double> _logoSpinAnimation;
 
   late AudioPlayer _audioPlayer;
@@ -42,7 +40,11 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
   Duration _totalDuration = Duration.zero;
 
   double _playbackSpeed = 1.0;
-  final List<double> _speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+  final List<double> _speedOptions = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+  bool _isSpeedControlExpanded = false;
+
+  PageController _pageController = PageController();
+  int _currentPageIndex = 0;
 
   String _currentAudioPath = '';
   bool _isRawAudioFile = false; // Flag to indicate if we're using direct file access
@@ -62,15 +64,12 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
             _isPlaying = false;
             _currentPosition = _audioPlayer.duration ?? Duration.zero;
             _playButtonController.reverse();
-            _waveController.stop();
             _logoSpinController.stop();
           } else if (state.playing) {
             _playButtonController.forward();
-            _waveController.repeat();
             _logoSpinController.repeat();
           } else {
             _playButtonController.reverse();
-            _waveController.stop();
             _logoSpinController.stop();
           }
         });
@@ -100,11 +99,6 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
       vsync: this,
     );
 
-    _waveController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-
     _logoSpinController = AnimationController(
       duration: const Duration(seconds: 8), // Slow spin - 8 seconds per rotation
       vsync: this,
@@ -115,14 +109,6 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _playButtonController,
-      curve: Curves.easeInOut,
-    ));
-
-    _waveAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _waveController,
       curve: Curves.easeInOut,
     ));
 
@@ -139,8 +125,8 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
   void dispose() {
     _audioPlayer.dispose();
     _playButtonController.dispose();
-    _waveController.dispose();
     _logoSpinController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -245,14 +231,24 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
     }
   }
 
-  Future<void> _changePlaybackSpeed() async {
+  Future<void> _changePlaybackSpeed([double? newSpeed]) async {
     try {
-      _playbackSpeed = _speedOptions[(_speedOptions.indexOf(_playbackSpeed) + 1) % _speedOptions.length];
+      if (newSpeed != null) {
+        _playbackSpeed = newSpeed;
+      } else {
+        _playbackSpeed = _speedOptions[(_speedOptions.indexOf(_playbackSpeed) + 1) % _speedOptions.length];
+      }
       await _audioPlayer.setSpeed(_playbackSpeed);
       setState(() {});
     } catch (e) {
       _showError('Speed change error: $e');
     }
+  }
+
+  void _toggleSpeedControl() {
+    setState(() {
+      _isSpeedControlExpanded = !_isSpeedControlExpanded;
+    });
   }
 
   Future<void> _downloadPodcast() async {
@@ -414,64 +410,274 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
           ? const Center(child: CircularProgressIndicator())
           : _hasError
               ? _buildErrorState(isDarkMode)
-              : Column(
-                children: [
-                  // Podcast Info Card
-                  Expanded(
-                    flex: 4,
-                    child: Container(
-                      margin: const EdgeInsets.all(16),
-                      child: _buildPodcastInfoCard(isDarkMode),
-                    ),
-                  ),
+              : PageView(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentPageIndex = index;
+                    });
+                  },
+                  children: [
+                    // Page 1: Player View
+                    _buildPlayerPage(isDarkMode),
+                    // Page 2: Transcript View
+                    _buildTranscriptPage(isDarkMode),
+                  ],
+                ),
+    );
+  }
 
-                  // Player Controls Container with gradient background
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          isDarkMode 
-                            ? AppTheme.surfaceDark.withOpacity(0.95)
-                            : AppTheme.surface.withOpacity(0.95),
-                          isDarkMode 
-                            ? AppTheme.surfaceVariantDark.withOpacity(0.9)
-                            : AppTheme.surfaceVariant.withOpacity(0.8),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(30),
-                        topRight: Radius.circular(30),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          spreadRadius: 0,
-                          offset: const Offset(0, -2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        // Progress Bar
-                        _buildProgressBar(isDarkMode),
-                        const SizedBox(height: 12),
+  Widget _buildPlayerPage(bool isDarkMode) {
+    return Column(
+      children: [
+        // Podcast Info Card
+        Expanded(
+          flex: 4,
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            child: _buildPodcastInfoCard(isDarkMode),
+          ),
+        ),
 
-                        // Player Controls
-                        _buildPlayerControls(isDarkMode),
-                        const SizedBox(height: 20),
-
-                        // Script Toggle - centered
-                        Center(child: _buildScriptToggle(isDarkMode)),
-                        const SizedBox(height: 10),
-                      ],
-                    ),
-                  ),
-                ],
+        // Player Controls Container with gradient background
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                isDarkMode
+                  ? AppTheme.surfaceDark.withOpacity(0.95)
+                  : AppTheme.surface.withOpacity(0.95),
+                isDarkMode
+                  ? AppTheme.surfaceVariantDark.withOpacity(0.9)
+                  : AppTheme.surfaceVariant.withOpacity(0.8),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                spreadRadius: 0,
+                offset: const Offset(0, -2),
               ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Progress Bar
+              _buildProgressBar(isDarkMode),
+              const SizedBox(height: 12),
+
+              // Player Controls
+              _buildPlayerControls(isDarkMode),
+              const SizedBox(height: 20),
+
+              // Page indicator and swipe hint
+              _buildPageIndicator(isDarkMode),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTranscriptPage(bool isDarkMode) {
+    return Column(
+      children: [
+        // Header with back navigation
+        Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  _pageController.animateToPage(
+                    0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                icon: Icon(
+                  Icons.arrow_back_ios,
+                  color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'Transcript',
+                  style: AppTheme.headingMedium.copyWith(
+                    color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(width: 48), // Balance the back button
+            ],
+          ),
+        ),
+
+        // Transcript content
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  isDarkMode
+                    ? AppTheme.surfaceDark.withOpacity(0.95)
+                    : AppTheme.surface.withOpacity(0.95),
+                  isDarkMode
+                    ? AppTheme.surfaceVariantDark.withOpacity(0.9)
+                    : AppTheme.surfaceVariant.withOpacity(0.8),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDarkMode
+                  ? AppTheme.primaryBlue.withOpacity(0.2)
+                  : AppTheme.primaryBlue.withOpacity(0.1),
+              ),
+            ),
+            child: SingleChildScrollView(
+              child: Text(
+                widget.podcast.metadata['script'] as String? ?? 'No script available for this podcast.',
+                style: AppTheme.bodyLarge.copyWith(
+                  color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
+                  height: 1.6,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Mini player controls at bottom
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                isDarkMode
+                  ? AppTheme.surfaceDark.withOpacity(0.95)
+                  : AppTheme.surface.withOpacity(0.95),
+                isDarkMode
+                  ? AppTheme.surfaceVariantDark.withOpacity(0.9)
+                  : AppTheme.surfaceVariant.withOpacity(0.8),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Row(
+            children: [
+              // Play/Pause button
+              GestureDetector(
+                onTap: _togglePlayPause,
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [AppTheme.primaryBlue, AppTheme.primaryLight],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Icon(
+                    _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    size: 28,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Progress info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.podcast.title,
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${_formatDuration(_currentPosition)} / ${_formatDuration(_totalDuration)}',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPageIndicator(bool isDarkMode) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Page dots
+        Row(
+          children: [
+            _buildPageDot(0, isDarkMode),
+            const SizedBox(width: 8),
+            _buildPageDot(1, isDarkMode),
+          ],
+        ),
+        const SizedBox(width: 16),
+
+        // Swipe hint
+        Text(
+          'Swipe for transcript →',
+          style: AppTheme.bodySmall.copyWith(
+            color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPageDot(int index, bool isDarkMode) {
+    final isActive = index == _currentPageIndex;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: isActive ? 20 : 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: isActive
+          ? AppTheme.primaryBlue
+          : (isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary).withOpacity(0.3),
+        borderRadius: BorderRadius.circular(4),
+      ),
     );
   }
 
@@ -771,38 +977,7 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
             },
           ),
         ),
-        
-        const SizedBox(height: 4),
-        
-        // Audio wave visualization indicator (simplified)
-        if (_isPlaying)
-          SizedBox(
-            height: 20,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                9, 
-                (index) => _buildWaveBar(index, isDarkMode),
-              ),
-            ),
-          ),
       ],
-    );
-  }
-
-  Widget _buildWaveBar(int index, bool isDarkMode) {
-    // Create a pseudo-random height based on the index
-    final heights = [0.3, 0.5, 0.7, 0.9, 1.0, 0.9, 0.7, 0.5, 0.3];
-    
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 300 + (index * 50)),
-      height: _isPlaying ? heights[index] * 18 : 4,
-      width: 3,
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      decoration: BoxDecoration(
-        color: AppTheme.primaryBlue.withOpacity(_isPlaying ? 0.7 : 0.3),
-        borderRadius: BorderRadius.circular(1),
-      ),
     );
   }
 
@@ -817,29 +992,43 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
             GestureDetector(
               onTap: () => _rewind(),
               child: Container(
-                width: 56,
-                height: 56,
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: (isDarkMode ? AppTheme.surfaceVariantDark : AppTheme.surfaceVariant).withOpacity(0.7),
+                  gradient: LinearGradient(
+                    colors: [
+                      isDarkMode
+                        ? AppTheme.surfaceVariantDark.withOpacity(0.9)
+                        : AppTheme.surfaceVariant.withOpacity(0.9),
+                      isDarkMode
+                        ? AppTheme.surfaceDark.withOpacity(0.8)
+                        : AppTheme.surface.withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border.all(
+                    color: isDarkMode
+                      ? AppTheme.primaryBlue.withOpacity(0.3)
+                      : AppTheme.primaryBlue.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryBlue.withOpacity(0.2),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Icon(Icons.replay, 
-                      size: 24, 
-                      color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary
-                    ),
-                    Positioned(
-                      bottom: 18,
-                      child: Text(
-                        "10",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
-                        ),
-                      ),
+                    Icon(Icons.replay_10_rounded,
+                      size: 28,
+                      color: AppTheme.primaryBlue,
                     ),
                   ],
                 ),
@@ -888,29 +1077,43 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
             GestureDetector(
               onTap: () => _fastForward(),
               child: Container(
-                width: 56,
-                height: 56,
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: (isDarkMode ? AppTheme.surfaceVariantDark : AppTheme.surfaceVariant).withOpacity(0.7),
+                  gradient: LinearGradient(
+                    colors: [
+                      isDarkMode
+                        ? AppTheme.surfaceVariantDark.withOpacity(0.9)
+                        : AppTheme.surfaceVariant.withOpacity(0.9),
+                      isDarkMode
+                        ? AppTheme.surfaceDark.withOpacity(0.8)
+                        : AppTheme.surface.withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border.all(
+                    color: isDarkMode
+                      ? AppTheme.primaryBlue.withOpacity(0.3)
+                      : AppTheme.primaryBlue.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryBlue.withOpacity(0.2),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Icon(Icons.forward, 
-                      size: 24, 
-                      color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary
-                    ),
-                    Positioned(
-                      bottom: 18,
-                      child: Text(
-                        "10",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
-                        ),
-                      ),
+                    Icon(Icons.forward_10_rounded,
+                      size: 28,
+                      color: AppTheme.primaryBlue,
                     ),
                   ],
                 ),
@@ -921,53 +1124,160 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
         
         const SizedBox(height: 24),
         
-        // Playback Speed Control
-        GestureDetector(
-          onTap: () => _changePlaybackSpeed(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.primaryBlue.withOpacity(0.1),
-                  AppTheme.primaryLight.withOpacity(0.15),
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppTheme.primaryBlue.withOpacity(0.2),
+        // Enhanced Playback Speed Control
+        _buildSpeedControl(isDarkMode),
+      ],
+    );
+  }
+
+  Widget _buildSpeedControl(bool isDarkMode) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      child: _isSpeedControlExpanded
+        ? _buildExpandedSpeedControl(isDarkMode)
+        : _buildCompactSpeedControl(isDarkMode),
+    );
+  }
+
+  Widget _buildCompactSpeedControl(bool isDarkMode) {
+    return GestureDetector(
+      onTap: _toggleSpeedControl,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.primaryBlue.withOpacity(0.1),
+              AppTheme.primaryLight.withOpacity(0.15),
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppTheme.primaryBlue.withOpacity(0.2),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.speed,
+              size: 18,
+              color: AppTheme.primaryBlue,
+            ),
+            const SizedBox(width: 6),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return ScaleTransition(scale: animation, child: child);
+              },
+              child: Text(
+                '${_playbackSpeed}x',
+                key: ValueKey<double>(_playbackSpeed),
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.primaryBlue,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.speed,
-                  size: 18,
-                  color: AppTheme.primaryBlue,
-                ),
-                const SizedBox(width: 6),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return ScaleTransition(scale: animation, child: child);
-                  },
-                  child: Text(
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpandedSpeedControl(bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primaryBlue.withOpacity(0.1),
+            AppTheme.primaryLight.withOpacity(0.15),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: AppTheme.primaryBlue.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Left speeds (0.25x, 0.5x)
+          ..._speedOptions.where((speed) => speed < 1.0).map((speed) =>
+            _buildSpeedOption(speed, isDarkMode)
+          ).toList(),
+
+          // Current speed (center)
+          GestureDetector(
+            onTap: _toggleSpeedControl,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryBlue,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.speed,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
                     '${_playbackSpeed}x',
-                    key: ValueKey<double>(_playbackSpeed),
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.primaryBlue,
+                    style: AppTheme.bodySmall.copyWith(
+                      color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
+
+          // Right speeds (1.25x, 1.5x)
+          ..._speedOptions.where((speed) => speed > 1.0).map((speed) =>
+            _buildSpeedOption(speed, isDarkMode)
+          ).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpeedOption(double speed, bool isDarkMode) {
+    final isSelected = speed == _playbackSpeed;
+    return GestureDetector(
+      onTap: () {
+        _changePlaybackSpeed(speed);
+        _toggleSpeedControl();
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected
+            ? AppTheme.primaryBlue.withOpacity(0.2)
+            : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
         ),
-      ],
+        child: Text(
+          '${speed}x',
+          style: AppTheme.bodySmall.copyWith(
+            color: isSelected
+              ? AppTheme.primaryBlue
+              : (isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary),
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+      ),
     );
   }
 
