@@ -660,6 +660,7 @@ Please use these exact speaker names in the script.''';
               children: [
                 DropdownButtonFormField<String>(
                   value: _selectedModel,
+                  isExpanded: true,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -670,12 +671,34 @@ Please use these exact speaker names in the script.''';
                     final canHandle = _aiService.canHandleContent(widget.content, model.contextLength);
                     return DropdownMenuItem(
                       value: model.id,
-                      child: Text(
-                        model.name,
-                        style: TextStyle(
-                          color: canHandle ? null : AppTheme.secondaryRed,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              model.name,
+                              style: TextStyle(
+                                color: canHandle ? null : AppTheme.secondaryRed,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                            Text(
+                              '${model.contextLength.toStringAsFixed(0)} tokens',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: canHandle
+                                    ? (Theme.of(context).brightness == Brightness.dark
+                                        ? AppTheme.textSecondaryDark
+                                        : AppTheme.textSecondary)
+                                    : AppTheme.secondaryRed.withOpacity(0.7),
+                              ),
+                            ),
+                          ],
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
                     );
                   }).toList(),

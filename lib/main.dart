@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:echogenai/providers/theme_provider.dart';
+import 'package:echogenai/services/global_audio_manager.dart';
 
 void main() async {
   // Catch any errors that occur during app startup
@@ -33,6 +34,9 @@ void main() async {
     // Initialize theme provider
     final themeProvider = ThemeProvider();
     await themeProvider.initialize();
+
+    // Initialize global audio manager
+    await GlobalAudioManager.instance.init();
 
     // Run the app
     runApp(

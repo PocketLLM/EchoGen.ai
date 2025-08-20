@@ -212,7 +212,7 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
       _isGenerating = true;
       _error = null;
       _generationProgress = 0.0;
-      _currentStep = 'Initializing podcast generation...';
+      _currentStep = 'Firing up the podcast kitchen 🔥';
       _keepConnectionAlive = true;  // Flag to maintain connection in background
     });
 
@@ -221,20 +221,20 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
       await Future.delayed(const Duration(milliseconds: 500));
       setState(() {
         _generationProgress = 0.15;
-        _currentStep = 'Analyzing script structure...';
+        _currentStep = 'Reading your script like a bedtime story 📖';
       });
 
       // Step 2: Prepare TTS request
       await Future.delayed(const Duration(milliseconds: 300));
       setState(() {
         _generationProgress = 0.25;
-        _currentStep = 'Preparing voice synthesis...';
+        _currentStep = 'Warming up the vocal cords 🎤';
       });
 
       // Step 3: Generate audio (this is the main step)
       setState(() {
         _generationProgress = 0.35;
-        _currentStep = 'Generating ${widget.speaker1} and ${widget.speaker2} voices...';
+        _currentStep = 'Bringing ${widget.speaker1} and ${widget.speaker2} to life 🎭';
       });
 
       // Generate the actual podcast with speaker names
@@ -252,7 +252,7 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
       // Step 4: Processing audio
       setState(() {
         _generationProgress = 0.85;
-        _currentStep = 'Processing audio quality...';
+        _currentStep = 'Polishing the audio to perfection ✨';
       });
 
       // Extract title from script using AI service
@@ -295,7 +295,7 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
       // Final step
       setState(() {
         _generationProgress = 1.0;
-        _currentStep = 'Podcast ready!';
+        _currentStep = 'Your podcast is ready to serve! 🎧🍽️';
       });
 
       await Future.delayed(const Duration(milliseconds: 500));
@@ -615,37 +615,33 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
                 
                 const SizedBox(height: 12),
                 
-                // Current step with animation for loading phases
+                // Current step with helpful messages
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryBlue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.primaryBlue.withOpacity(0.2)),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Column(
                     children: [
-                      if (_generationProgress > 0.1 && _generationProgress < 0.95)
-                        Container(
-                          width: 16,
-                          height: 16,
-                          margin: const EdgeInsets.only(right: 12),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
-                          ),
+                      Text(
+                        _currentStep,
+                        style: AppTheme.bodyLarge.copyWith(
+                          color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
+                          fontWeight: FontWeight.w600,
                         ),
-                      Flexible(
-                        child: Text(
-                          _currentStep,
-                          style: AppTheme.bodyLarge.copyWith(
-                            color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _getHelpfulMessage(),
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+                          fontStyle: FontStyle.italic,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
@@ -721,19 +717,35 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
   String _getEstimatedTimeLeft() {
     if (_generationProgress < 0.05) return "Preparing...";
     if (_generationProgress > 0.95) return "Almost done!";
-    
+
     // Calculate based on script length
     final scriptLength = widget.script.length;
     final baseTime = 5 + (scriptLength / 1000); // 5 seconds base + 1 second per 1000 chars
     final remainingPercentage = 1.0 - _generationProgress;
     final secondsLeft = (baseTime * remainingPercentage).round();
-    
+
     if (secondsLeft < 60) {
       return "$secondsLeft sec remaining";
     } else {
       final minutes = secondsLeft ~/ 60;
       final seconds = secondsLeft % 60;
       return "$minutes:${seconds.toString().padLeft(2, '0')} min remaining";
+    }
+  }
+
+  String _getHelpfulMessage() {
+    if (_generationProgress < 0.2) {
+      return "Keep the app open, cooking spices for you 🌶️";
+    } else if (_generationProgress < 0.4) {
+      return "Generating content, audio is just on the door 🎵";
+    } else if (_generationProgress < 0.6) {
+      return "Mixing voices like a master chef 👨‍🍳";
+    } else if (_generationProgress < 0.8) {
+      return "Adding the final touches ✨";
+    } else if (_generationProgress < 0.95) {
+      return "Almost ready to serve your podcast 🎧";
+    } else {
+      return "Bon appétit! Your podcast is ready 🍽️";
     }
   }
 
@@ -1150,6 +1162,7 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: _selectedSpeaker1Voice,
+              isExpanded: true,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -1159,7 +1172,14 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
               items: _availableVoices.map((voice) {
                 return DropdownMenuItem(
                   value: voice.id,
-                  child: Text('${voice.name} (${voice.gender})'),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      '${voice.name} (${voice.gender})',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
                 );
               }).toList(),
               onChanged: (value) {
@@ -1180,6 +1200,7 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: _selectedSpeaker2Voice,
+              isExpanded: true,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -1189,7 +1210,14 @@ class _PodcastGenerationScreenState extends State<PodcastGenerationScreen>
               items: _availableVoices.map((voice) {
                 return DropdownMenuItem(
                   value: voice.id,
-                  child: Text('${voice.name} (${voice.gender})'),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      '${voice.name} (${voice.gender})',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
                 );
               }).toList(),
               onChanged: (value) {

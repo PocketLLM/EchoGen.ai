@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:echogenai/constants/app_theme.dart';
 import 'package:echogenai/widgets/app_bar_widget.dart';
 import 'package:echogenai/widgets/bottom_nav_bar_widget.dart';
+import 'package:echogenai/widgets/mini_player_widget.dart';
 import 'package:echogenai/screens/about_screen.dart';
 import 'package:echogenai/screens/api_keys_screen.dart';
 import 'package:echogenai/screens/url_scraping_screen.dart';
@@ -13,6 +14,7 @@ import 'package:echogenai/screens/podcast_player_screen.dart';
 import 'package:echogenai/services/web_scraping_service.dart';
 import 'package:echogenai/services/storage_service.dart';
 import 'package:echogenai/services/ai_service.dart';
+import 'package:echogenai/services/global_audio_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
@@ -62,7 +64,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: Stack(
+        children: [
+          _screens[_selectedIndex],
+          // Mini player positioned at the bottom
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 80, // Above the bottom navigation bar
+            child: const MiniPlayerWidget(),
+          ),
+        ],
+      ),
       bottomNavigationBar: EchoGenBottomNavBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -1950,6 +1963,30 @@ class _LibraryTabState extends State<_LibraryTab> with TickerProviderStateMixin 
                       color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'delete') {
+                        _deleteScrapedUrl(urlData);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    child: Icon(
+                      Icons.more_vert,
+                      color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -2099,7 +2136,7 @@ class _LibraryTabState extends State<_LibraryTab> with TickerProviderStateMixin 
 
   Widget _buildPodcastCard(GeneratedPodcast podcast, bool isDarkMode) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: isDarkMode ? AppTheme.surfaceDark : AppTheme.surface,
         borderRadius: BorderRadius.circular(16),
@@ -2116,25 +2153,115 @@ class _LibraryTabState extends State<_LibraryTab> with TickerProviderStateMixin 
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primaryBlue,
-                        AppTheme.primaryLight,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+            // Cover Art
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primaryBlue,
+                    AppTheme.primaryLight,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryBlue.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  'lib/assets/logo.png',
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.podcasts,
+                      color: Colors.white,
+                      size: 30,
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    podcast.title,
+                    style: AppTheme.titleMedium.copyWith(
+                      color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Subtitle with speakers
+                  Text(
+                    '${podcast.metadata['speaker1']} & ${podcast.metadata['speaker2']}',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Category badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.primaryBlue.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Text(
+                      podcast.metadata['category']?.toString().toUpperCase() ?? 'ACAPELLA',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.primaryBlue,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // Actions
+            Column(
+              children: [
+                // Play button
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryBlue,
+                    borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
                         color: AppTheme.primaryBlue.withOpacity(0.3),
@@ -2143,169 +2270,86 @@ class _LibraryTabState extends State<_LibraryTab> with TickerProviderStateMixin 
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      'lib/assets/logo.png',
-                      width: 56,
-                      height: 56,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          Icons.podcasts,
-                          color: Colors.white,
-                          size: 28,
-                        );
-                      },
+                  child: IconButton(
+                    onPressed: () async {
+                      try {
+                        await GlobalAudioManager.instance.playPodcast(podcast);
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to play podcast: $e'),
+                              backgroundColor: AppTheme.secondaryRed,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    icon: Icon(
+                      Icons.play_arrow,
+                      color: Colors.white,
+                      size: 24,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        podcast.title,
-                        style: AppTheme.titleMedium.copyWith(
-                          color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Generated ${_formatDate(podcast.generatedAt)}',
-                        style: AppTheme.bodySmall.copyWith(
-                          color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppTheme.secondaryGreen.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppTheme.secondaryGreen.withOpacity(0.3),
-                          ),
-                        ),
-                        child: Text(
-                          podcast.status.toUpperCase(),
-                          style: AppTheme.bodySmall.copyWith(
-                            color: AppTheme.secondaryGreen,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 10,
-                          ),
-                        ),
+
+                const SizedBox(height: 8),
+
+                // Download button
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.secondaryGreen,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.secondaryGreen.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                ),
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'delete') {
-                      _deletePodcast(podcast);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Delete'),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Metadata
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildMetadataChip(
-                  icon: Icons.category,
-                  label: podcast.metadata['category'] ?? 'Unknown',
-                  color: AppTheme.primaryBlue,
-                  isDarkMode: isDarkMode,
-                ),
-                _buildMetadataChip(
-                  icon: Icons.people,
-                  label: '${podcast.metadata['speaker1']} & ${podcast.metadata['speaker2']}',
-                  color: AppTheme.secondaryGreen,
-                  isDarkMode: isDarkMode,
-                ),
-                _buildMetadataChip(
-                  icon: Icons.access_time,
-                  label: podcast.metadata['duration'] ?? 'Unknown',
-                  color: AppTheme.primaryLight,
-                  isDarkMode: isDarkMode,
-                ),
-                _buildMetadataChip(
-                  icon: Icons.mic,
-                  label: podcast.metadata['provider'] ?? 'Unknown',
-                  color: AppTheme.secondaryOrange,
-                  isDarkMode: isDarkMode,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Actions
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
+                  child: IconButton(
                     onPressed: () {
-                      // Share podcast
+                      // Download podcast
                       Share.shareXFiles([XFile(podcast.audioPath)], text: 'Check out this podcast: ${podcast.title}');
                     },
-                    icon: Icon(Icons.share),
-                    label: Text('Share'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
-                      side: BorderSide(
-                        color: isDarkMode ? AppTheme.surfaceVariantDark : AppTheme.borderLight,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => PodcastPlayerScreen(podcast: podcast),
-                        ),
-                      );
-                    },
-                    icon: Icon(Icons.play_arrow, color: Colors.white),
-                    label: Text('Play'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryBlue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    icon: Icon(
+                      Icons.download,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
                 ),
               ],
+            ),
+
+            const SizedBox(width: 8),
+
+            // 3-dot menu
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _deletePodcast(podcast);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete'),
+                    ],
+                  ),
+                ),
+              ],
+              child: Icon(
+                Icons.more_vert,
+                color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+              ),
             ),
           ],
         ),
@@ -2394,6 +2438,30 @@ class _LibraryTabState extends State<_LibraryTab> with TickerProviderStateMixin 
                   Text(
                     _formatDate(script.generatedAt),
                     style: AppTheme.bodySmall.copyWith(
+                      color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'delete') {
+                        _deleteGeneratedScript(script);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    child: Icon(
+                      Icons.more_vert,
                       color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
                     ),
                   ),
@@ -2508,6 +2576,88 @@ class _LibraryTabState extends State<_LibraryTab> with TickerProviderStateMixin 
                 Icon(Icons.error, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
                 Text('Failed to delete podcast'),
+              ],
+            ),
+            backgroundColor: AppTheme.secondaryRed,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteScrapedUrl(ScrapedUrlData urlData) async {
+    try {
+      await _storageService.deleteScrapedUrl(urlData.id);
+      await _loadData(); // Refresh the data
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text('URL deleted successfully'),
+              ],
+            ),
+            backgroundColor: AppTheme.secondaryGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text('Failed to delete URL'),
+              ],
+            ),
+            backgroundColor: AppTheme.secondaryRed,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteGeneratedScript(GeneratedScript script) async {
+    try {
+      await _storageService.deleteGeneratedScript(script.id);
+      await _loadData(); // Refresh the data
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text('Script deleted successfully'),
+              ],
+            ),
+            backgroundColor: AppTheme.secondaryGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text('Failed to delete script'),
               ],
             ),
             backgroundColor: AppTheme.secondaryRed,

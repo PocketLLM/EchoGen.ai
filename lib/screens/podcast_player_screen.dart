@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:echogenai/constants/app_theme.dart';
 import 'package:echogenai/widgets/app_bar_widget.dart';
 import 'package:echogenai/services/storage_service.dart';
+import 'package:echogenai/services/global_audio_manager.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 
@@ -29,7 +29,7 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
   late Animation<double> _playButtonAnimation;
   late Animation<double> _logoSpinAnimation;
 
-  late AudioPlayer _audioPlayer;
+  final GlobalAudioManager _audioManager = GlobalAudioManager.instance;
   bool _isPlaying = false;
   bool _isLoading = true;
   bool _showScript = false;
@@ -46,26 +46,18 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
   PageController _pageController = PageController();
   int _currentPageIndex = 0;
 
-  String _currentAudioPath = '';
-  bool _isRawAudioFile = false; // Flag to indicate if we're using direct file access
-
   @override
   void initState() {
     super.initState();
-    _audioPlayer = AudioPlayer();
     _setupAnimations();
     _initializePlayer();
-    
-    _audioPlayer.playerStateStream.listen((state) {
+
+    // Listen to global audio manager streams
+    _audioManager.isPlayingStream.listen((isPlaying) {
       if (mounted) {
         setState(() {
-          _isPlaying = state.playing;
-          if (state.processingState == ProcessingState.completed) {
-            _isPlaying = false;
-            _currentPosition = _audioPlayer.duration ?? Duration.zero;
-            _playButtonController.reverse();
-            _logoSpinController.stop();
-          } else if (state.playing) {
+          _isPlaying = isPlaying;
+          if (isPlaying) {
             _playButtonController.forward();
             _logoSpinController.repeat();
           } else {
@@ -75,19 +67,27 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
         });
       }
     });
-    
-    _audioPlayer.positionStream.listen((position) {
+
+    _audioManager.positionStream.listen((position) {
       if (mounted) {
         setState(() {
           _currentPosition = position;
         });
       }
     });
-    
-    _audioPlayer.durationStream.listen((duration) {
+
+    _audioManager.durationStream.listen((duration) {
       if (mounted) {
         setState(() {
           _totalDuration = duration ?? Duration.zero;
+        });
+      }
+    });
+
+    _audioManager.speedStream.listen((speed) {
+      if (mounted) {
+        setState(() {
+          _playbackSpeed = speed;
         });
       }
     });
@@ -123,7 +123,6 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
     _playButtonController.dispose();
     _logoSpinController.dispose();
     _pageController.dispose();
@@ -138,63 +137,19 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
     });
 
     try {
-      String audioPath = widget.podcast.audioPath;
-      _currentAudioPath = audioPath;
-      _isRawAudioFile = false;
-      
-      // Validate and load audio file
-      try {
-        final file = File(audioPath);
-        if (!await file.exists()) {
-          throw Exception('Audio file not found at: $audioPath');
-        }
+      // Load the podcast using the global audio manager
+      await _audioManager.playPodcast(widget.podcast);
 
-        final fileSize = await file.length();
-        print('📁 File size: $fileSize bytes');
-
-        // Validate that the file is not empty
-        if (fileSize == 0) {
-          throw Exception('Audio file is empty');
-        }
-
-        // Validate WAV file format if it's a WAV file
-        if (audioPath.toLowerCase().endsWith('.wav')) {
-          final isValidWav = await _validateWavFile(file);
-          if (!isValidWav) {
-            throw Exception('Invalid WAV file format');
-          }
-          print('✅ WAV file validation passed');
-        }
-
-        // Load the audio file using just_audio
-        try {
-          await _audioPlayer.setFilePath(audioPath);
-          print('✅ Audio file loaded successfully');
-        } catch (playerError) {
-          print('⚠️ Direct file loading failed: $playerError');
-
-          // Try alternative loading method for problematic files
-          try {
-            final fileBytes = await file.readAsBytes();
-            final audioSource = AudioSource.uri(
-              Uri.dataFromBytes(fileBytes, mimeType: _getMimeType(audioPath))
-            );
-            await _audioPlayer.setAudioSource(audioSource);
-            _isRawAudioFile = true;
-            print('✅ Successfully loaded audio using data URI method');
-          } catch (fallbackError) {
-            print('❌ Fallback loading also failed: $fallbackError');
-            throw Exception('Unable to load audio file: $playerError');
-          }
-        }
-      } catch (e) {
-        print('❌ Audio loading error: $e');
-        throw e;
-      }
-
+      // Get initial state
       setState(() {
+        _isPlaying = _audioManager.isPlaying;
+        _currentPosition = _audioManager.position;
+        _totalDuration = _audioManager.duration ?? Duration.zero;
+        _playbackSpeed = _audioManager.speed;
         _isLoading = false;
       });
+
+      print('✅ Podcast loaded successfully via global audio manager');
     } catch (e) {
       print('❌ Error initializing player: $e');
       setState(() {
@@ -207,39 +162,33 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
 
   void _togglePlayPause() {
     if (_isPlaying) {
-      _audioPlayer.pause();
+      _audioManager.pause();
     } else {
-      _audioPlayer.play();
+      _audioManager.playPodcast(widget.podcast);
     }
   }
 
   void _seekTo(Duration position) {
-    _audioPlayer.seek(position);
+    _audioManager.seek(position);
   }
 
   void _rewind() {
-    final newPosition = _currentPosition - const Duration(seconds: 10);
-    _seekTo(newPosition < Duration.zero ? Duration.zero : newPosition);
+    _audioManager.rewind();
   }
 
   void _fastForward() {
-    final newPosition = _currentPosition + const Duration(seconds: 10);
-    if (newPosition > _totalDuration) {
-      _seekTo(_totalDuration);
-    } else {
-      _seekTo(newPosition);
-    }
+    _audioManager.fastForward();
   }
 
   Future<void> _changePlaybackSpeed([double? newSpeed]) async {
     try {
+      double targetSpeed;
       if (newSpeed != null) {
-        _playbackSpeed = newSpeed;
+        targetSpeed = newSpeed;
       } else {
-        _playbackSpeed = _speedOptions[(_speedOptions.indexOf(_playbackSpeed) + 1) % _speedOptions.length];
+        targetSpeed = _speedOptions[(_speedOptions.indexOf(_playbackSpeed) + 1) % _speedOptions.length];
       }
-      await _audioPlayer.setSpeed(_playbackSpeed);
-      setState(() {});
+      await _audioManager.setSpeed(targetSpeed);
     } catch (e) {
       _showError('Speed change error: $e');
     }
