@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 /// Service for generating podcast cover art using ImageRouter API
 class ImageRouterService {
   static const String _baseUrl = 'https://api.imagerouter.io';
-  static const String _apiKeyKey = 'image_router_api_key';
+  static const String _apiKeyKey = 'api_key_imagerouter';
   
   /// Get available models from ImageRouter
   Future<List<ImageModel>> getAvailableModels() async {

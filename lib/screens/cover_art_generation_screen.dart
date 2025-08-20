@@ -23,7 +23,6 @@ class CoverArtGenerationScreen extends StatefulWidget {
 class _CoverArtGenerationScreenState extends State<CoverArtGenerationScreen> {
   final ImageRouterService _imageService = ImageRouterService();
   final TextEditingController _promptController = TextEditingController();
-  final TextEditingController _apiKeyController = TextEditingController();
   
   List<ImageModel> _availableModels = [];
   ImageModel? _selectedModel;
@@ -75,41 +74,7 @@ class _CoverArtGenerationScreenState extends State<CoverArtGenerationScreen> {
            'Theme related to "${widget.podcastTitle}". Minimalist style with good contrast.';
   }
 
-  Future<void> _saveApiKey() async {
-    if (_apiKeyController.text.trim().isEmpty) {
-      _setError('Please enter your ImageRouter API key');
-      return;
-    }
 
-    setState(() => _isLoading = true);
-    
-    try {
-      final isValid = await _imageService.validateApiKey(_apiKeyController.text.trim());
-      
-      if (isValid) {
-        await _imageService.saveApiKey(_apiKeyController.text.trim());
-        _hasApiKey = true;
-        _apiKeyController.clear();
-        
-        // Load models after saving API key
-        _availableModels = await _imageService.getAvailableModels();
-        if (_availableModels.isNotEmpty) {
-          _selectedModel = _availableModels.first;
-        }
-        
-        _setError(null);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('API key saved successfully!')),
-        );
-      } else {
-        _setError('Invalid API key. Please check and try again.');
-      }
-    } catch (e) {
-      _setError('Failed to validate API key: $e');
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
 
   Future<void> _generateCoverArt() async {
     if (_promptController.text.trim().isEmpty) {
@@ -285,29 +250,20 @@ class _CoverArtGenerationScreenState extends State<CoverArtGenerationScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'To generate custom cover art, you need an ImageRouter API key. Get one from imagerouter.io',
+            'To generate custom cover art, you need an ImageRouter API key. Configure it in the API Keys settings.',
             style: AppTheme.bodyMedium.copyWith(
               color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _apiKeyController,
-            decoration: InputDecoration(
-              labelText: 'API Key',
-              hintText: 'Enter your ImageRouter API key',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              prefixIcon: Icon(Icons.vpn_key),
-            ),
-            obscureText: true,
-          ),
-          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _saveApiKey,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pushNamed('/api_keys');
+              },
+              icon: Icon(Icons.settings, color: Colors.white),
+              label: Text('Go to API Keys Settings'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryBlue,
                 foregroundColor: Colors.white,
@@ -316,16 +272,6 @@ class _CoverArtGenerationScreenState extends State<CoverArtGenerationScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Text('Save API Key'),
             ),
           ),
         ],

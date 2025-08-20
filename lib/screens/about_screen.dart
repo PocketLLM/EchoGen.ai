@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:echogenai/constants/app_theme.dart';
 import 'package:echogenai/widgets/app_bar_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -98,7 +99,7 @@ class AboutScreen extends StatelessWidget {
             _buildSection(
               context,
               '✨ Features',
-              '• Generate podcasts from URLs\n• Transform documents into audio content\n• Create scripts from prompts\n• Multiple AI provider support\n• Dark/Light theme support\n• Intuitive and modern UI',
+              '• Generate podcasts from URLs and documents\n• AI-powered script generation with multiple models\n• Background audio playback with notifications\n• Mini player across all screens\n• Custom cover art generation with ImageRouter\n• Centralized API key management\n• Multiple TTS providers (Gemini, OpenAI, ElevenLabs)\n• Dark/Light theme support\n• Modern and intuitive UI\n• Export and share functionality',
             ),
             
             const SizedBox(height: 24),
@@ -107,7 +108,7 @@ class AboutScreen extends StatelessWidget {
             _buildInfoCard(
               context,
               [
-                _buildInfoRow(context, 'Version', '2.1.0+RELEASE.1151'),
+                _buildInfoRow(context, 'Version', '0.2.0+BETA'),
                 _buildInfoRow(context, 'Build', 'Flutter 3.24.0'),
                 _buildInfoRow(context, 'Platform', 'Android • iOS'),
                 _buildInfoRow(context, 'License', 'MIT License'),
@@ -166,16 +167,23 @@ class AboutScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 16,
+                    runSpacing: 16,
                     children: [
                       _buildSocialButton(
                         context,
                         Icons.code,
                         'GitHub',
-                        () => _launchUrl(context, 'https://github.com/yourusername/echogenai'),
+                        () => _launchUrl(context, 'https://github.com/echogenai/echogenai'),
                       ),
-                      const SizedBox(width: 16),
+                      _buildSocialButton(
+                        context,
+                        Icons.favorite,
+                        'Sponsor',
+                        () => _launchUrl(context, 'https://github.com/sponsors/echogenai'),
+                      ),
                       _buildSocialButton(
                         context,
                         Icons.alternate_email,
@@ -433,14 +441,34 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  void _launchUrl(BuildContext context, String url) {
-    // TODO: Add url_launcher package and implement
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening: $url'),
-        duration: const Duration(seconds: 3),
-      ),
-    );
+  Future<void> _launchUrl(BuildContext context, String url) async {
+    try {
+      final Uri uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication, // Opens in Chrome/default browser
+        );
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open: $url'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening link: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   String _getTermsContent() {

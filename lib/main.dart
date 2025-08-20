@@ -36,7 +36,11 @@ void main() async {
     await themeProvider.initialize();
 
     // Initialize global audio manager
-    await GlobalAudioManager.instance.init();
+    try {
+      await GlobalAudioManager.instance.init();
+    } catch (e) {
+      print('Warning: Audio manager initialization failed: $e');
+    }
 
     // Run the app
     runApp(

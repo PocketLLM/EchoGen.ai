@@ -20,10 +20,13 @@ class BackgroundAudioService extends BaseAudioHandler with QueueHandler, SeekHan
 
   Future<void> init() async {
     try {
+      // Only initialize if not already completed
+      if (_readyCompleter.isCompleted) return;
+
       // Configure audio session
       final session = await AudioSession.instance;
       await session.configure(const AudioSessionConfiguration.speech());
-      
+
       // Listen to audio player events
       _audioPlayer.playerStateStream.listen(_broadcastState);
       _audioPlayer.positionStream.listen((position) {
@@ -31,7 +34,7 @@ class BackgroundAudioService extends BaseAudioHandler with QueueHandler, SeekHan
           updatePosition: position,
         ));
       });
-      
+
       // Set initial state
       playbackState.add(PlaybackState(
         controls: [
@@ -48,11 +51,15 @@ class BackgroundAudioService extends BaseAudioHandler with QueueHandler, SeekHan
         processingState: AudioProcessingState.idle,
         playing: false,
       ));
-      
-      _readyCompleter.complete();
+
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.complete();
+      }
     } catch (e) {
       print('Error initializing background audio service: $e');
-      _readyCompleter.complete();
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.complete();
+      }
     }
   }
 

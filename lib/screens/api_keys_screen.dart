@@ -68,6 +68,14 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
       color: AppTheme.onboardingBlue,
       placeholder: 'Your Hyperbrowser API key',
     ),
+    ApiKeyConfig(
+      id: 'imagerouter',
+      name: 'ImageRouter',
+      description: 'For AI-generated podcast cover art',
+      icon: Icons.image,
+      color: AppTheme.secondaryOrange,
+      placeholder: 'ir-...',
+    ),
   ];
 
   @override
@@ -162,6 +170,8 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
         return key.startsWith('fc-') && key.length > 10;
       case 'hyperbrowser':
         return key.length >= 8;
+      case 'imagerouter':
+        return key.startsWith('ir-') && key.length > 10;
       default:
         return key.length > 10;
     }

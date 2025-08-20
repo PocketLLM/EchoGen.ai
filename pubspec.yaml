@@ -43,11 +43,10 @@ dependencies:
   http: ^1.1.0
   share_plus: ^7.2.1
   just_audio: ^0.9.36
-  audio_service: ^0.18.12
-  audio_session: ^0.1.16
   permission_handler: ^11.1.0
   path_provider_platform_interface: ^2.1.2
   file_selector: ^1.0.3
+  url_launcher: ^6.2.2
 
 dev_dependencies:
   flutter_test:

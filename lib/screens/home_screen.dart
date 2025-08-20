@@ -2151,10 +2151,21 @@ class _LibraryTabState extends State<_LibraryTab> with TickerProviderStateMixin 
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => PodcastPlayerScreen(podcast: podcast),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
             // Cover Art
             Container(
               width: 60,
@@ -2252,77 +2263,42 @@ class _LibraryTabState extends State<_LibraryTab> with TickerProviderStateMixin 
 
             const SizedBox(width: 12),
 
-            // Actions
-            Column(
-              children: [
-                // Play button
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryBlue,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryBlue.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+            // Play button only
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryBlue,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryBlue.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                  child: IconButton(
-                    onPressed: () async {
-                      try {
-                        await GlobalAudioManager.instance.playPodcast(podcast);
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Failed to play podcast: $e'),
-                              backgroundColor: AppTheme.secondaryRed,
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    icon: Icon(
-                      Icons.play_arrow,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
+                ],
+              ),
+              child: IconButton(
+                onPressed: () async {
+                  try {
+                    await GlobalAudioManager.instance.playPodcast(podcast);
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to play podcast: $e'),
+                          backgroundColor: AppTheme.secondaryRed,
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: Icon(
+                  Icons.play_arrow,
+                  color: Colors.white,
+                  size: 24,
                 ),
-
-                const SizedBox(height: 8),
-
-                // Download button
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppTheme.secondaryGreen,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.secondaryGreen.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: IconButton(
-                    onPressed: () {
-                      // Download podcast
-                      Share.shareXFiles([XFile(podcast.audioPath)], text: 'Check out this podcast: ${podcast.title}');
-                    },
-                    icon: Icon(
-                      Icons.download,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
 
             const SizedBox(width: 8),
@@ -2332,9 +2308,21 @@ class _LibraryTabState extends State<_LibraryTab> with TickerProviderStateMixin 
               onSelected: (value) {
                 if (value == 'delete') {
                   _deletePodcast(podcast);
+                } else if (value == 'download') {
+                  Share.shareXFiles([XFile(podcast.audioPath)], text: 'Check out this podcast: ${podcast.title}');
                 }
               },
               itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'download',
+                  child: Row(
+                    children: [
+                      Icon(Icons.download, color: Colors.blue),
+                      SizedBox(width: 8),
+                      Text('Download'),
+                    ],
+                  ),
+                ),
                 const PopupMenuItem(
                   value: 'delete',
                   child: Row(
@@ -2351,7 +2339,9 @@ class _LibraryTabState extends State<_LibraryTab> with TickerProviderStateMixin 
                 color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
               ),
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
