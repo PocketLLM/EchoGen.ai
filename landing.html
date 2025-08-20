@@ -166,6 +166,28 @@
             margin-right: 15px;
         }
 
+        .btn-ph {
+            background-color: #DA552E;
+            color: white;
+            margin-right: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-ph:hover {
+            background-color: #b84726;
+        }
+
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
         /* Wave animation */
         .wave {
             position: absolute;
@@ -186,64 +208,6 @@
 
         .wave .shape-fill {
             fill: var(--background);
-        }
-
-        /* Features section */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 50px;
-        }
-
-        .feature-card {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 40px 30px;
-            text-align: center;
-            transform: translateY(30px);
-            animation: fadeUp 0.8s ease forwards 0.3s;
-        }
-
-        .hero-subtitle {
-            font-size: 1.5rem;
-            font-weight: 400;
-            margin-bottom: 2.5rem;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-            opacity: 0;
-            transform: translateY(30px);
-            animation: fadeUp 0.8s ease forwards 0.6s;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 16px 32px;
-            background-color: var(--surface);
-            color: var(--primary);
-            font-weight: 600;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            opacity: 0;
-            transform: translateY(30px);
-            animation: fadeUp 0.8s ease forwards 0.9s;
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-primary {
-            background-color: var(--secondary);
-            color: white;
-            margin-right: 15px;
         }
 
         /* Features section */
@@ -812,22 +776,23 @@
 <body>
     <!-- Hero Section -->
     <section class="hero">
+        <canvas id="hero-canvas"></canvas>
         <div class="container">
             <div class="hero-content">
                 <div class="hero-logo">
-                    <!-- Logo placeholder -->
                     <img src="lib/assets/logo.png" alt="EchoGen.ai Logo">
                 </div>
                 <h1 class="hero-title">Transform Content into Engaging AI-Powered Podcasts</h1>
-                <p class="hero-subtitle">EchoGen.ai converts articles, blogs, and text into professional-quality podcasts with multi-speaker conversations</p>
+                <p class="hero-subtitle" id="hero-subtitle"></p>
                 <div class="hero-buttons">
+                    <a href="https://www.producthunt.com/posts/echogen-ai" class="btn btn-ph" target="_blank">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 10H7.5V12.5H12.5V10Z" fill="white"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M10 0C4.47715 0 0 4.47715 0 10C0 15.5228 4.47715 20 10 20C15.5228 20 20 15.5228 20 10C20 4.47715 15.5228 0 10 0ZM7.5 5C6.11929 5 5 6.11929 5 7.5V12.5C5 13.8807 6.11929 15 7.5 15H12.5C13.8807 15 15 13.8807 15 12.5V7.5C15 6.11929 13.8807 5 12.5 5H7.5Z" fill="white"></path></svg>
+                        Featured on Product Hunt
+                    </a>
                     <a href="#download" class="btn btn-primary">Download Now</a>
-                    <a href="#features" class="btn">View Demo</a>
                 </div>
             </div>
         </div>
-        
-        <!-- Wave divider -->
         <div class="wave">
             <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
                 <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" class="shape-fill"></path>
@@ -961,17 +926,20 @@
                 <div class="carousel-track">
                     <div class="carousel-slide">
                         <div class="screenshot">
-                            <div class="screenshot-placeholder" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); width: 100%; height: 400px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Screenshot 1</div>
+                            <img src="lib/assets/ai_voice.png" alt="AI Voice Customization" style="width:100%; border-radius: 16px;">
+                            <div style="text-align: center; padding: 10px; font-weight: bold;">AI Voice Customization</div>
                         </div>
                     </div>
                     <div class="carousel-slide">
                         <div class="screenshot">
-                            <div class="screenshot-placeholder" style="background: linear-gradient(135deg, var(--secondary) 0%, #ff8e8e 100%); width: 100%; height: 400px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Screenshot 2</div>
+                            <img src="lib/assets/app_logo.png" alt="App Logo" style="width:100%; border-radius: 16px;">
+                            <div style="text-align: center; padding: 10px; font-weight: bold;">EchoGen.ai Logo</div>
                         </div>
                     </div>
                     <div class="carousel-slide">
                         <div class="screenshot">
-                            <div class="screenshot-placeholder" style="background: linear-gradient(135deg, #6c63ff 0%, #8a85ff 100%); width: 100%; height: 400px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Screenshot 3</div>
+                            <img src="lib/assets/mic_icon.png" alt="Microphone Icon" style="width:100%; border-radius: 16px;">
+                            <div style="text-align: center; padding: 10px; font-weight: bold;">Recording Interface</div>
                         </div>
                     </div>
                 </div>
@@ -1206,54 +1174,199 @@
     </footer>
 
     <script>
-        // Intersection Observer for scroll animations
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, {
-            threshold: 0.1
-        });
-
-        // Observe all animate-on-scroll elements
-        document.querySelectorAll('.section-title, .section-subtitle, .feature-card, .step').forEach(el => {
-            observer.observe(el);
-        });
-
-        // Carousel functionality
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize GitHub stats counters
-            document.addEventListener('DOMContentLoaded', () => {
-                // Fetch GitHub stats
-                fetch('https://api.github.com/repos/Mr-Dark-debug/EchoGen.ai')
-                    .then(response => response.json())
-                    .then(data => {
-                        animateCounter('github-stars', data.stargazers_count);
-                        animateCounter('github-forks', data.forks_count);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching GitHub stats:', error);
-                        document.getElementById('github-stars').textContent = '1.2k';
-                        document.getElementById('github-forks').textContent = '350';
-                    });
+            // --- Intersection Observer for scroll animations ---
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1
             });
+
+            document.querySelectorAll('.section-title, .section-subtitle, .feature-card, .step').forEach(el => {
+                observer.observe(el);
+            });
+
+            // --- Parallax Effect ---
+            window.addEventListener('scroll', () => {
+                const parallaxSections = document.querySelectorAll('.hero, .testimonials');
+                parallaxSections.forEach(section => {
+                    const speed = section.classList.contains('hero') ? -0.5 : -0.2;
+                    const yPos = window.pageYOffset * speed;
+                    section.style.backgroundPosition = `center ${yPos}px`;
+                });
+            });
+
+            // --- Typewriter Effect ---
+            const subtitle = document.getElementById('hero-subtitle');
+            const text = 'EchoGen.ai converts articles, blogs, and text into professional-quality podcasts with multi-speaker conversations';
+            let index = 0;
+
+            function type() {
+                subtitle.textContent = text.slice(0, index);
+                index++;
+                if (index <= text.length) {
+                    setTimeout(type, 50);
+                }
+            }
+            type();
+
+            // --- Interactive Waveform Background ---
+            const canvas = document.getElementById('hero-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let time = 0;
+            function drawWave() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                for (let x = 0; x < canvas.width; x++) {
+                    const y = Math.sin(x * 0.02 + time) * 20 + canvas.height / 2;
+                    ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.stroke();
+                time += 0.05;
+                requestAnimationFrame(drawWave);
+            }
+            drawWave();
+
+            // --- Accordion (FAQ) Functionality ---
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const activeHeader = document.querySelector('.accordion-header.active');
+                    if (activeHeader && activeHeader !== header) {
+                        activeHeader.classList.remove('active');
+                        activeHeader.nextElementSibling.style.maxHeight = 0;
+                    }
+
+                    header.classList.toggle('active');
+                    const content = header.nextElementSibling;
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                });
+            });
+
+            // --- Carousel Functionality ---
+            const track = document.querySelector('.carousel-track');
+            const slides = Array.from(track.children);
+            const nextButton = document.querySelector('.carousel-btn.next');
+            const prevButton = document.querySelector('.carousel-btn.prev');
+            const dotsNav = document.querySelector('.carousel-dots');
             
+            if (track && slides.length > 0) {
+                const slideWidth = slides[0].getBoundingClientRect().width;
+
+                // Create dots
+                slides.forEach((slide, i) => {
+                    const dot = document.createElement('button');
+                    dot.classList.add('dot');
+                    if (i === 0) dot.classList.add('active');
+                    dotsNav.appendChild(dot);
+                    dot.addEventListener('click', e => {
+                        moveToSlide(track, slides[0], slides[i]);
+                        updateDots(dotsNav.querySelector('.active'), dot);
+                    });
+                });
+
+                const dots = Array.from(dotsNav.children);
+
+                const moveToSlide = (track, currentSlide, targetSlide) => {
+                    track.style.transform = 'translateX(-' + targetSlide.style.left + ')';
+                    currentSlide.classList.remove('current-slide');
+                    targetSlide.classList.add('current-slide');
+                }
+
+                const updateDots = (currentDot, targetDot) => {
+                    currentDot.classList.remove('active');
+                    targetDot.classList.add('active');
+                }
+
+                // Arrange slides next to one another
+                const setSlidePosition = (slide, index) => {
+                    slide.style.left = slideWidth * index + 'px';
+                };
+                slides.forEach(setSlidePosition);
+
+                // Next button
+                nextButton.addEventListener('click', () => {
+                    const currentSlide = track.querySelector('.current-slide') || slides[0];
+                    let nextSlide = currentSlide.nextElementSibling;
+                    if (!nextSlide) {
+                        nextSlide = slides[0]; // Loop to start
+                    }
+                    moveToSlide(track, currentSlide, nextSlide);
+                    
+                    const currentDot = dotsNav.querySelector('.active');
+                    let nextDot = currentDot.nextElementSibling;
+                    if (!nextDot) {
+                        nextDot = dots[0];
+                    }
+                    updateDots(currentDot, nextDot);
+                });
+
+                // Prev button
+                prevButton.addEventListener('click', () => {
+                    const currentSlide = track.querySelector('.current-slide') || slides[0];
+                    let prevSlide = currentSlide.previousElementSibling;
+                    if (!prevSlide) {
+                        prevSlide = slides[slides.length - 1]; // Loop to end
+                    }
+                    moveToSlide(track, currentSlide, prevSlide);
+
+                    const currentDot = dotsNav.querySelector('.active');
+                    let prevDot = currentDot.previousElementSibling;
+                    if (!prevDot) {
+                        prevDot = dots[dots.length - 1];
+                    }
+                    updateDots(currentDot, prevDot);
+                });
+                
+                slides[0].classList.add('current-slide');
+            }
+
+
+            // --- GitHub Stats Counter ---
+            fetch('https://api.github.com/repos/Mr-Dark-debug/EchoGen.ai')
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.stargazers_count) animateCounter('github-stars', data.stargazers_count);
+                    if (data.forks_count) animateCounter('github-forks', data.forks_count);
+                })
+                .catch(error => {
+                    console.error('Error fetching GitHub stats:', error);
+                    // Fallback values
+                    document.getElementById('github-stars').textContent = '1,200+';
+                    document.getElementById('github-forks').textContent = '350+';
+                });
+
             function animateCounter(elementId, target) {
                 const element = document.getElementById(elementId);
-                const duration = 2000; // 2 seconds
+                if (!element) return;
+                const duration = 2000;
                 const start = 0;
-                const increment = target / (duration / 16); // 60fps
-                
+                const increment = target / (duration / 16);
+
                 let current = start;
                 const timer = setInterval(() => {
                     current += increment;
                     if (current >= target) {
                         clearInterval(timer);
-                        current = target;
+                        element.textContent = target.toLocaleString();
+                    } else {
+                        element.textContent = Math.floor(current).toLocaleString();
                     }
-                    element.textContent = Math.floor(current).toLocaleString();
                 }, 16);
             }
         });

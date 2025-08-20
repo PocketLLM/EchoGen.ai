@@ -7,7 +7,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:typed_data';
 import 'dart:io';
 
 class PodcastPlayerScreen extends StatefulWidget {
@@ -27,8 +26,10 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
 
   late AnimationController _playButtonController;
   late AnimationController _waveController;
+  late AnimationController _logoSpinController;
   late Animation<double> _playButtonAnimation;
   late Animation<double> _waveAnimation;
+  late Animation<double> _logoSpinAnimation;
 
   late AudioPlayer _audioPlayer;
   bool _isPlaying = false;
@@ -62,12 +63,15 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
             _currentPosition = _audioPlayer.duration ?? Duration.zero;
             _playButtonController.reverse();
             _waveController.stop();
+            _logoSpinController.stop();
           } else if (state.playing) {
             _playButtonController.forward();
             _waveController.repeat();
+            _logoSpinController.repeat();
           } else {
             _playButtonController.reverse();
             _waveController.stop();
+            _logoSpinController.stop();
           }
         });
       }
@@ -95,9 +99,14 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _waveController = AnimationController(
       duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _logoSpinController = AnimationController(
+      duration: const Duration(seconds: 8), // Slow spin - 8 seconds per rotation
       vsync: this,
     );
 
@@ -116,6 +125,14 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
       parent: _waveController,
       curve: Curves.easeInOut,
     ));
+
+    _logoSpinAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _logoSpinController,
+      curve: Curves.linear,
+    ));
   }
 
   @override
@@ -123,6 +140,7 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
     _audioPlayer.dispose();
     _playButtonController.dispose();
     _waveController.dispose();
+    _logoSpinController.dispose();
     super.dispose();
   }
 
@@ -138,38 +156,53 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
       _currentAudioPath = audioPath;
       _isRawAudioFile = false;
       
-      // Log file details for debugging
+      // Validate and load audio file
       try {
         final file = File(audioPath);
-        if (await file.exists()) {
-          final fileSize = await file.length();
-          print('📁 File size: $fileSize bytes');
-          
-          // Check if the file is a WAV from Gemini TTS
-          if (audioPath.toLowerCase().endsWith('.wav')) {
-            // Try using the standard player first
-            try {
-              await _audioPlayer.setFilePath(audioPath);
-              print('✅ Standard player loaded the WAV file successfully');
-            } catch (playerError) {
-              print('⚠️ Standard player failed to load WAV file: $playerError');
-              print('🔄 Trying alternative playback method...');
-              
-              // Fallback to using BytesSource as an alternative method
-              Uint8List fileBytes = await file.readAsBytes();
-              await _audioPlayer.setAudioSource(AudioSource.uri(Uri.dataFromBytes(fileBytes, mimeType: 'audio/wav')));
-              _isRawAudioFile = true;
-              print('✅ Successfully loaded audio using BytesSource method');
-            }
-          } else {
-            // For non-WAV files, use standard player
-            await _audioPlayer.setFilePath(audioPath);
-          }
-        } else {
+        if (!await file.exists()) {
           throw Exception('Audio file not found at: $audioPath');
         }
+
+        final fileSize = await file.length();
+        print('📁 File size: $fileSize bytes');
+
+        // Validate that the file is not empty
+        if (fileSize == 0) {
+          throw Exception('Audio file is empty');
+        }
+
+        // Validate WAV file format if it's a WAV file
+        if (audioPath.toLowerCase().endsWith('.wav')) {
+          final isValidWav = await _validateWavFile(file);
+          if (!isValidWav) {
+            throw Exception('Invalid WAV file format');
+          }
+          print('✅ WAV file validation passed');
+        }
+
+        // Load the audio file using just_audio
+        try {
+          await _audioPlayer.setFilePath(audioPath);
+          print('✅ Audio file loaded successfully');
+        } catch (playerError) {
+          print('⚠️ Direct file loading failed: $playerError');
+
+          // Try alternative loading method for problematic files
+          try {
+            final fileBytes = await file.readAsBytes();
+            final audioSource = AudioSource.uri(
+              Uri.dataFromBytes(fileBytes, mimeType: _getMimeType(audioPath))
+            );
+            await _audioPlayer.setAudioSource(audioSource);
+            _isRawAudioFile = true;
+            print('✅ Successfully loaded audio using data URI method');
+          } catch (fallbackError) {
+            print('❌ Fallback loading also failed: $fallbackError');
+            throw Exception('Unable to load audio file: $playerError');
+          }
+        }
       } catch (e) {
-        print('❌ Could not get file details: $e');
+        print('❌ Audio loading error: $e');
         throw e;
       }
 
@@ -509,39 +542,26 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(iconSize / 2),
-                    child: _isPlaying
-                        ? TweenAnimationBuilder(
-                            duration: const Duration(seconds: 2),
-                            tween: Tween<double>(begin: 0, end: 2 * 3.14159),
-                            builder: (context, double value, child) {
-                              return Transform.rotate(
-                                angle: _isPlaying ? value * 0.05 : 0,
-                                child: child,
-                              );
-                            },
-                            child: Image.asset(
-                              'lib/assets/logo.png',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Icon(
-                                  Icons.podcasts,
-                                  size: iconSize * 0.4,
-                                  color: AppTheme.primaryBlue,
-                                );
-                              },
-                            ),
-                          )
-                        : Image.asset(
-                            'lib/assets/logo.png',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.podcasts,
-                                size: iconSize * 0.4,
-                                color: AppTheme.primaryBlue,
-                              );
-                            },
-                          ),
+                    child: AnimatedBuilder(
+                      animation: _logoSpinAnimation,
+                      builder: (context, child) {
+                        return Transform.rotate(
+                          angle: _isPlaying ? _logoSpinAnimation.value * 2 * 3.14159 : 0,
+                          child: child,
+                        );
+                      },
+                      child: Image.asset(
+                        'lib/assets/logo.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.podcasts,
+                            size: iconSize * 0.4,
+                            color: AppTheme.primaryBlue,
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -696,9 +716,9 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
                   height: 12,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(6),
-                    color: isDarkMode 
-                      ? AppTheme.surfaceVariantDark.withOpacity(0.5) 
-                      : AppTheme.surfaceVariant.withOpacity(0.7),
+                    color: isDarkMode
+                      ? AppTheme.surfaceVariantDark.withOpacity(0.8)
+                      : AppTheme.surfaceVariant.withOpacity(0.9),
                   ),
                   child: Stack(
                     children: [
@@ -1235,5 +1255,66 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
         ),
       ),
     );
+  }
+
+  /// Validates that a WAV file has proper headers and format
+  Future<bool> _validateWavFile(File file) async {
+    try {
+      final bytes = await file.readAsBytes();
+
+      // Check minimum file size (WAV header is 44 bytes)
+      if (bytes.length < 44) {
+        print('❌ WAV file too small: ${bytes.length} bytes');
+        return false;
+      }
+
+      // Check RIFF header
+      final riffHeader = String.fromCharCodes(bytes.sublist(0, 4));
+      if (riffHeader != 'RIFF') {
+        print('❌ Invalid RIFF header: $riffHeader');
+        return false;
+      }
+
+      // Check WAVE format
+      final waveFormat = String.fromCharCodes(bytes.sublist(8, 12));
+      if (waveFormat != 'WAVE') {
+        print('❌ Invalid WAVE format: $waveFormat');
+        return false;
+      }
+
+      // Check fmt chunk
+      final fmtChunk = String.fromCharCodes(bytes.sublist(12, 16));
+      if (fmtChunk != 'fmt ') {
+        print('❌ Invalid fmt chunk: $fmtChunk');
+        return false;
+      }
+
+      print('✅ WAV file validation passed');
+      return true;
+    } catch (e) {
+      print('❌ WAV validation error: $e');
+      return false;
+    }
+  }
+
+  /// Gets the appropriate MIME type for an audio file based on its extension
+  String _getMimeType(String filePath) {
+    final extension = filePath.toLowerCase().split('.').last;
+    switch (extension) {
+      case 'wav':
+        return 'audio/wav';
+      case 'mp3':
+        return 'audio/mpeg';
+      case 'aac':
+        return 'audio/aac';
+      case 'm4a':
+        return 'audio/mp4';
+      case 'ogg':
+        return 'audio/ogg';
+      case 'flac':
+        return 'audio/flac';
+      default:
+        return 'audio/wav'; // Default to WAV
+    }
   }
 }

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as path;
+import 'audio_validation_service.dart';
 
 class TTSService {
   static const String _geminiBaseUrl = 'https://generativelanguage.googleapis.com/v1beta';
@@ -254,23 +255,41 @@ $script
         
         // Extract audio data from response
         final audioData = responseData['candidates'][0]['content']['parts'][0]['inlineData']['data'];
-        
-        // Decode base64 audio data
-        final audioBytes = base64Decode(audioData);
-        
-        // Save the original WAV file
+
+        // Decode base64 audio data (this is raw PCM data)
+        final pcmBytes = base64Decode(audioData);
+        print('📊 Raw PCM data size: ${pcmBytes.length} bytes');
+
+        // Convert PCM to proper WAV format with headers
+        final wavBytes = _convertPcmToWav(pcmBytes);
+        print('📊 WAV data size: ${wavBytes.length} bytes');
+
+        // Save the properly formatted WAV file
         final directory = await _getDownloadDirectory();
         final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
         final wavPath = '${directory.path}/podcast_$timestamp.wav';
-        
+
         // Save audio file to preferred location
         final wavFile = File(wavPath);
-        await wavFile.writeAsBytes(audioBytes);
-        print('📀 Original WAV podcast saved to: $wavPath');
-        
+        await wavFile.writeAsBytes(wavBytes);
+        print('📀 Properly formatted WAV podcast saved to: $wavPath');
+
+        // Validate the generated audio file
+        final validationResult = await AudioValidationService.validateAudioFile(wavPath);
+        if (!validationResult.isValid) {
+          print('❌ Generated audio file validation failed: ${validationResult.error}');
+          print('❌ Details: ${validationResult.details}');
+          throw Exception('Generated audio file is invalid: ${validationResult.error}');
+        }
+
+        print('✅ Audio file validation passed: ${validationResult.details}');
+        if (validationResult.audioInfo != null) {
+          print('🎵 Audio info: ${validationResult.audioInfo}');
+        }
+
         // Close HTTP client properly
         client.close();
-        
+
         // Return the WAV path (the primary format)
         return wavPath;
       } else {
@@ -357,9 +376,62 @@ $script
     }
   }
 
-  // This method has been removed in favor of the actual implementation 
-  // using the Gemini TTS API
+  /// Converts raw PCM audio data to WAV format with proper headers
+  /// Gemini TTS returns 16-bit signed linear PCM at 24kHz sample rate
+  Uint8List _convertPcmToWav(Uint8List pcmData) {
+    const int sampleRate = 24000; // Gemini TTS uses 24kHz
+    const int bitsPerSample = 16; // 16-bit audio
+    const int channels = 1; // Mono audio
 
+    final int byteRate = sampleRate * channels * (bitsPerSample ~/ 8);
+    final int blockAlign = channels * (bitsPerSample ~/ 8);
+    final int dataSize = pcmData.length;
+    final int fileSize = 36 + dataSize; // WAV header is 44 bytes, minus 8 for RIFF header
+
+    // Create WAV header
+    final ByteData header = ByteData(44);
+
+    // RIFF header
+    header.setUint8(0, 0x52); // 'R'
+    header.setUint8(1, 0x49); // 'I'
+    header.setUint8(2, 0x46); // 'F'
+    header.setUint8(3, 0x46); // 'F'
+    header.setUint32(4, fileSize, Endian.little); // File size
+    header.setUint8(8, 0x57);  // 'W'
+    header.setUint8(9, 0x41);  // 'A'
+    header.setUint8(10, 0x56); // 'V'
+    header.setUint8(11, 0x45); // 'E'
+
+    // Format chunk
+    header.setUint8(12, 0x66); // 'f'
+    header.setUint8(13, 0x6D); // 'm'
+    header.setUint8(14, 0x74); // 't'
+    header.setUint8(15, 0x20); // ' '
+    header.setUint32(16, 16, Endian.little); // Format chunk size
+    header.setUint16(20, 1, Endian.little);  // Audio format (PCM)
+    header.setUint16(22, channels, Endian.little); // Number of channels
+    header.setUint32(24, sampleRate, Endian.little); // Sample rate
+    header.setUint32(28, byteRate, Endian.little); // Byte rate
+    header.setUint16(32, blockAlign, Endian.little); // Block align
+    header.setUint16(34, bitsPerSample, Endian.little); // Bits per sample
+
+    // Data chunk
+    header.setUint8(36, 0x64); // 'd'
+    header.setUint8(37, 0x61); // 'a'
+    header.setUint8(38, 0x74); // 't'
+    header.setUint8(39, 0x61); // 'a'
+    header.setUint32(40, dataSize, Endian.little); // Data size
+
+    // Combine header and PCM data
+    final Uint8List wavData = Uint8List(44 + dataSize);
+    wavData.setRange(0, 44, header.buffer.asUint8List());
+    wavData.setRange(44, 44 + dataSize, pcmData);
+
+    print('✅ Successfully converted ${pcmData.length} bytes of PCM to ${wavData.length} bytes of WAV');
+    return wavData;
+  }
+
+  // Legacy methods - kept for compatibility but not used
   Future<String> _generateOpenAIAudio(String text, String voiceId) async {
     // Mock implementation - in real app, would call OpenAI TTS API
     await Future.delayed(const Duration(milliseconds: 500));
