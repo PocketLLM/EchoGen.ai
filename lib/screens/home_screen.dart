@@ -71,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           Positioned(
             left: 0,
             right: 0,
-            bottom: 80, // Above the bottom navigation bar
+            bottom: 90, // Closer to the bottom navigation bar
             child: const MiniPlayerWidget(),
           ),
         ],

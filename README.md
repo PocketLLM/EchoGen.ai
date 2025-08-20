@@ -21,17 +21,31 @@
 
 EchoGen.ai is a powerful, open-source Flutter application that transforms any web content or text into engaging, multi-speaker AI-generated podcasts. Whether you're a content creator, educator, or just someone who loves podcasts, EchoGen.ai makes it easy to convert articles, blog posts, or custom scripts into professional-quality audio content.
 
-### 🌟 Why EchoGen.ai?
+### 🌟 Why EchoGen.ai v0.2.0?
 
-- **🎯 Content Transformation**: Convert any URL or text into podcast format
-- **🤖 AI-Powered**: Leverages cutting-edge AI models (Gemini, OpenAI, Groq)
-- **🎭 Multi-Speaker**: Natural conversations between two AI speakers
-- **🎨 Beautiful UI**: Modern, intuitive interface with dark/light themes
+- **🎵 Background Audio Playback**: Full background audio with notification controls and mini player
+- **🎨 AI Cover Art Generation**: Create stunning cover art using ImageRouter AI
+- **📝 Smart Script Chunking**: Handle long scripts with intelligent chunking to avoid timeouts
+- **🔑 Centralized API Management**: Secure management of all API keys in one location
+- **🎯 Enhanced Content Processing**: Convert any URL or text with improved error handling
+- **🤖 Multiple AI Providers**: Gemini, OpenAI, ElevenLabs, and ImageRouter support
+- **🎭 Multi-Speaker Conversations**: Natural conversations between AI speakers
+- **🎨 Modern UI/UX**: Improved loading messages, better error handling, dark/light themes
 - **📱 Cross-Platform**: Works on Android, iOS, and desktop
-- **🔒 Privacy-First**: All data stored locally on your device
 - **🆓 Open Source**: Completely free and open for contributions
 
 ## ✨ Features
+
+### 🆕 New in v0.2.0
+
+- **🎵 Background Audio Playback**: Full background audio service with notification controls
+- **🎮 Mini Player**: Floating mini player with spinning logo animation across all screens
+- **🎨 AI Cover Art Generation**: Generate custom cover art using ImageRouter AI
+- **📝 Smart Script Chunking**: Intelligent script splitting to handle long content without timeouts
+- **🔑 Centralized API Key Management**: Secure management of all API keys in Settings
+- **🎯 Enhanced Loading Experience**: Improved loading messages and progress tracking
+- **🔧 Better Error Handling**: More helpful error messages and recovery options
+- **🎨 UI/UX Improvements**: Redesigned library cards, better navigation, and visual enhancements
 
 ### 🌐 Content Scraping
 - **Web Scraping**: Extract content from any URL using Firecrawl or HyperbrowserAI
@@ -161,9 +175,17 @@ EchoGen.ai requires API keys for various services. Configure them in the app's s
   - Format: `AIza...`
 
 #### Optional APIs
-- **OpenAI**: Alternative AI provider
+- **OpenAI**: Alternative AI provider and TTS
   - Get your key: [OpenAI Platform](https://platform.openai.com/api-keys)
   - Format: `sk-...`
+
+- **ElevenLabs**: Premium TTS provider
+  - Get your key: [ElevenLabs](https://elevenlabs.io)
+  - Format: Various formats supported
+
+- **ImageRouter**: AI cover art generation
+  - Get your key: [ImageRouter](https://imagerouter.io)
+  - Format: Various formats supported (no specific prefix required)
 
 - **Groq**: Fast inference provider
   - Get your key: [Groq Console](https://console.groq.com/keys)
@@ -172,6 +194,10 @@ EchoGen.ai requires API keys for various services. Configure them in the app's s
 - **Firecrawl**: Web scraping service
   - Get your key: [Firecrawl](https://firecrawl.dev)
   - Format: `fc-...`
+
+- **HyperbrowserAI**: Alternative web scraping
+  - Get your key: [HyperbrowserAI](https://hyperbrowser.ai)
+  - Format: Various formats supported
 
 ### Environment Setup
 
@@ -292,9 +318,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **🎬 Video Podcasts**: Generate video content with AI avatars
 
 ### Version History
-- **v1.0.0**: Initial release with core features
-- **v1.1.0**: Enhanced UI, multi-provider support, improved TTS
-- **v1.2.0**: Library management, folder browsing, SVG icons
+- **v0.1.0**: Initial release with core features
+- **v0.2.0**: Background audio playback, AI cover art generation, smart script chunking, centralized API management, enhanced UI/UX
 
 ## 🔧 Troubleshooting
 

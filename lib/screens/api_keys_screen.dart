@@ -74,7 +74,7 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
       description: 'For AI-generated podcast cover art',
       icon: Icons.image,
       color: AppTheme.secondaryOrange,
-      placeholder: 'ir-...',
+      placeholder: 'Your ImageRouter API key',
     ),
   ];
 
@@ -171,7 +171,7 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
       case 'hyperbrowser':
         return key.length >= 8;
       case 'imagerouter':
-        return key.startsWith('ir-') && key.length > 10;
+        return key.length >= 20; // ImageRouter keys are typically longer
       default:
         return key.length > 10;
     }

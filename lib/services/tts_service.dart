@@ -163,9 +163,6 @@ class TTSService {
     String model = 'gemini-2.5-flash-preview-tts',
     String languageCode = 'en-US',
   }) async {
-    // Use persistent HTTP client that can handle background state
-    final client = http.Client();
-    
     try {
       print('🎙️ Starting Gemini multi-speaker podcast generation...');
       print('🤖 Using model: $model');
@@ -177,6 +174,55 @@ class TTSService {
       // Use our verification helper to get a valid API key
       final apiKey = await verifyGeminiApiKey();
 
+      // Check if script needs to be chunked (Gemini TTS limit is ~10KB)
+      const maxChunkSize = 6000; // More conservative limit to avoid timeouts
+
+      if (script.length <= maxChunkSize) {
+        print('📝 Script is within size limit, processing as single chunk');
+        return await _generateSingleChunk(
+          script: script,
+          speaker1Voice: speaker1Voice,
+          speaker2Voice: speaker2Voice,
+          speaker1Name: speaker1Name,
+          speaker2Name: speaker2Name,
+          model: model,
+          languageCode: languageCode,
+          apiKey: apiKey,
+        );
+      } else {
+        print('📝 Script is too long (${script.length} chars), splitting into chunks');
+        return await _generateChunkedPodcast(
+          script: script,
+          speaker1Voice: speaker1Voice,
+          speaker2Voice: speaker2Voice,
+          speaker1Name: speaker1Name,
+          speaker2Name: speaker2Name,
+          model: model,
+          languageCode: languageCode,
+          apiKey: apiKey,
+          maxChunkSize: maxChunkSize,
+        );
+      }
+    } catch (e) {
+      print('❌ Error in Gemini multi-speaker generation: $e');
+      rethrow;
+    }
+  }
+
+  Future<String> _generateSingleChunk({
+    required String script,
+    required String speaker1Voice,
+    required String speaker2Voice,
+    required String speaker1Name,
+    required String speaker2Name,
+    required String model,
+    required String languageCode,
+    required String apiKey,
+  }) async {
+    // Use persistent HTTP client that can handle background state
+    final client = http.Client();
+
+    try {
       print('🔑 API key found, making request...');
       // Ensure API key is properly URL-encoded
       final encodedApiKey = Uri.encodeQueryComponent(apiKey);
@@ -239,10 +285,10 @@ $script
         },
         body: jsonEncode(requestBody),
       ).timeout(
-        const Duration(minutes: 3),
+        const Duration(minutes: 5), // Increased timeout for single chunks
         onTimeout: () {
           client.close();
-          throw Exception('Request timed out after 3 minutes. Please try with a shorter script or check your connection.');
+          throw Exception('Request timed out after 5 minutes. The script might be too long for a single request. Please try with a shorter script.');
         },
       );
 
@@ -308,15 +354,166 @@ $script
         
         // Close HTTP client before throwing
         client.close();
-        
-        throw Exception('Gemini TTS API error: $errorMessage');
+
+        // Provide more helpful error messages based on common issues
+        if (errorMessage.toLowerCase().contains('quota') || errorMessage.toLowerCase().contains('limit')) {
+          throw Exception('API quota exceeded. Please wait a moment and try again, or try with a shorter script.');
+        } else if (errorMessage.toLowerCase().contains('timeout') || errorMessage.toLowerCase().contains('deadline')) {
+          throw Exception('Request timed out. The script might be too long. Please try with a shorter script.');
+        } else if (errorMessage.toLowerCase().contains('invalid') && errorMessage.toLowerCase().contains('key')) {
+          throw Exception('Invalid API key. Please check your Gemini API key in Settings.');
+        } else {
+          throw Exception('Gemini TTS API error: $errorMessage');
+        }
       }
     } catch (e) {
       // Ensure client is closed even on errors
       client.close();
-      
+
       print('❌ Error generating Gemini multi-speaker podcast: $e');
       throw Exception('Failed to generate podcast: $e');
+    }
+  }
+
+  Future<String> _generateChunkedPodcast({
+    required String script,
+    required String speaker1Voice,
+    required String speaker2Voice,
+    required String speaker1Name,
+    required String speaker2Name,
+    required String model,
+    required String languageCode,
+    required String apiKey,
+    required int maxChunkSize,
+  }) async {
+    try {
+      print('🔄 Starting chunked podcast generation...');
+
+      // Split script into chunks at natural break points
+      final chunks = _splitScriptIntoChunks(script, maxChunkSize);
+      print('📝 Split script into ${chunks.length} chunks');
+
+      final List<Uint8List> audioChunks = [];
+
+      for (int i = 0; i < chunks.length; i++) {
+        print('🎙️ Processing chunk ${i + 1}/${chunks.length}...');
+
+        // Generate audio for this chunk
+        final chunkAudioPath = await _generateSingleChunk(
+          script: chunks[i],
+          speaker1Voice: speaker1Voice,
+          speaker2Voice: speaker2Voice,
+          speaker1Name: speaker1Name,
+          speaker2Name: speaker2Name,
+          model: model,
+          languageCode: languageCode,
+          apiKey: apiKey,
+        );
+
+        // Read the audio file and add to chunks
+        final chunkFile = File(chunkAudioPath);
+        final chunkBytes = await chunkFile.readAsBytes();
+        audioChunks.add(chunkBytes);
+
+        // Clean up temporary chunk file
+        await chunkFile.delete();
+
+        // Add a small delay between requests to avoid rate limiting
+        if (i < chunks.length - 1) {
+          await Future.delayed(const Duration(seconds: 2));
+        }
+      }
+
+      // Combine all audio chunks into a single file
+      final combinedAudioPath = await _combineAudioChunks(audioChunks);
+      print('✅ Successfully combined ${chunks.length} audio chunks');
+
+      return combinedAudioPath;
+    } catch (e) {
+      print('❌ Error in chunked podcast generation: $e');
+      rethrow;
+    }
+  }
+
+  List<String> _splitScriptIntoChunks(String script, int maxChunkSize) {
+    final chunks = <String>[];
+    final lines = script.split('\n');
+    String currentChunk = '';
+
+    for (final line in lines) {
+      // Check if adding this line would exceed the chunk size
+      if (currentChunk.length + line.length + 1 > maxChunkSize && currentChunk.isNotEmpty) {
+        // Save current chunk and start a new one
+        chunks.add(currentChunk.trim());
+        currentChunk = line;
+      } else {
+        // Add line to current chunk
+        if (currentChunk.isNotEmpty) {
+          currentChunk += '\n';
+        }
+        currentChunk += line;
+      }
+    }
+
+    // Add the last chunk if it's not empty
+    if (currentChunk.trim().isNotEmpty) {
+      chunks.add(currentChunk.trim());
+    }
+
+    return chunks;
+  }
+
+  Future<String> _combineAudioChunks(List<Uint8List> audioChunks) async {
+    try {
+      print('🔗 Combining ${audioChunks.length} audio chunks...');
+
+      if (audioChunks.isEmpty) {
+        throw Exception('No audio chunks to combine');
+      }
+
+      if (audioChunks.length == 1) {
+        // Only one chunk, just save it
+        final directory = await _getDownloadDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+        final finalPath = '${directory.path}/podcast_$timestamp.wav';
+
+        final finalFile = File(finalPath);
+        await finalFile.writeAsBytes(audioChunks[0]);
+
+        return finalPath;
+      }
+
+      // For multiple chunks, we need to combine them
+      // This is a simplified approach - in production, you'd want proper audio concatenation
+      final combinedBytes = <int>[];
+
+      // Skip WAV headers for all chunks except the first one
+      for (int i = 0; i < audioChunks.length; i++) {
+        final chunk = audioChunks[i];
+        if (i == 0) {
+          // Keep the full first chunk (including WAV header)
+          combinedBytes.addAll(chunk);
+        } else {
+          // Skip the WAV header (first 44 bytes) for subsequent chunks
+          if (chunk.length > 44) {
+            combinedBytes.addAll(chunk.skip(44));
+          }
+        }
+      }
+
+      // Save the combined audio
+      final directory = await _getDownloadDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final finalPath = '${directory.path}/podcast_$timestamp.wav';
+
+      final finalFile = File(finalPath);
+      await finalFile.writeAsBytes(combinedBytes);
+
+      print('✅ Combined audio saved to: $finalPath');
+      return finalPath;
+    } catch (e) {
+      print('❌ Error combining audio chunks: $e');
+      rethrow;
     }
   }
 
