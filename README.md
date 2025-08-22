@@ -12,7 +12,7 @@
   [![GitHub Stars](https://img.shields.io/github/stars/Mr-Dark-debug/EchoGen.ai?style=social)](https://github.com/Mr-Dark-debug/EchoGen.ai/stargazers)
   [![GitHub Release](https://img.shields.io/github/v/release/Mr-Dark-debug/EchoGen.ai?style=flat&logo=github)](https://github.com/Mr-Dark-debug/EchoGen.ai/releases/latest)
   
-  [🚀 Features](#-features) • [📱 Screenshots](#-screenshots) • [🛠️ Installation](#️-installation) • [🔧 Configuration](#-configuration) • [🤝 Contributing](#-contributing)
+  [🚀 Features](#-features) • [📱 Screenshots](#-screenshots) • [🛠️ Installation](#️-installation) • [🔧 Configuration](#-configuration) • [🌐 Landing Page](#-landing-page) • [🤝 Contributing](#-contributing)
 </div>
 
 ---
@@ -132,19 +132,57 @@ EchoGen.ai is a powerful, open-source Flutter application that transforms any we
 
 ### Building for Production
 
-#### Android APK
+#### 🤖 Automated Releases (Recommended)
+
+EchoGen.ai uses GitHub Actions for automated building and releasing. Every push to `main` triggers automated builds:
+
+- **Automatic Builds**: Android APK, AAB, and iOS archives
+- **Version Management**: Automatic version detection from `pubspec.yaml`
+- **Release Creation**: Automated GitHub releases with downloadable assets
+- **Quality Assurance**: Automated testing and analysis
+
+#### 🔨 Manual Release Builds
+
+**Android APK (Universal)**
 ```bash
 flutter build apk --release
+# Output: build/app/outputs/flutter-apk/app-release.apk
 ```
 
-#### Android App Bundle
+**Android App Bundle (Google Play Store)**
 ```bash
 flutter build appbundle --release
+# Output: build/app/outputs/bundle/release/app-release.aab
 ```
 
-#### iOS
+**iOS (Requires macOS)**
 ```bash
 flutter build ios --release
+# For App Store distribution, use Xcode to archive and upload
+```
+
+**Web (Progressive Web App)**
+```bash
+flutter build web --release
+# Output: build/web/
+```
+
+**Windows (Requires Windows)**
+```bash
+flutter build windows --release
+# Output: build/windows/runner/Release/
+```
+
+**macOS (Requires macOS)**
+```bash
+flutter build macos --release
+# Output: build/macos/Build/Products/Release/
+```
+
+**Linux (Requires Linux)**
+```bash
+flutter build linux --release
+# Output: build/linux/x64/release/bundle/
 ```
 
 ### 🤖 Automated Releases
@@ -211,6 +249,68 @@ The app requires the following permissions:
 - **Storage**: To save podcasts and manage downloads
 - **Internet**: To access AI APIs and scrape content
 - **Network State**: To check connectivity
+
+## 🌐 Landing Page
+
+EchoGen.ai features a beautiful landing page hosted on GitHub Pages that showcases the app's features and provides download links.
+
+### 🔗 Live Demo
+
+**Visit the landing page**: [https://mr-dark-debug.github.io/EchoGen.ai/](https://mr-dark-debug.github.io/EchoGen.ai/)
+
+### 🛠️ GitHub Pages Setup
+
+The landing page is automatically deployed to GitHub Pages from the `docs/` folder:
+
+1. **Source File**: `landing.html` (main project directory)
+2. **Deployed As**: `docs/index.html` (GitHub Pages source)
+3. **Live URL**: `https://[username].github.io/[repository-name]/`
+
+#### Setting Up GitHub Pages
+
+1. **Repository Settings**:
+   - Go to your repository on GitHub
+   - Navigate to **Settings** → **Pages**
+   - Under **Source**, select **Deploy from a branch**
+   - Choose **main** branch and **/ (root)** folder
+   - Save the settings
+
+2. **Automatic Deployment**:
+   - Any changes to `docs/index.html` will automatically deploy
+   - GitHub Actions can be configured for advanced deployment workflows
+   - The site typically updates within 5-10 minutes
+
+#### Landing Page Features
+
+- **Responsive Design**: Works perfectly on desktop, tablet, and mobile
+- **Modern UI**: Clean, professional design with smooth animations
+- **Feature Showcase**: Highlights all major app features
+- **Direct Downloads**: Links to latest GitHub releases
+- **Social Links**: GitHub, Product Hunt, and other social platforms
+- **Fast Loading**: Optimized images and minimal dependencies
+
+#### Customizing the Landing Page
+
+1. **Edit Content**: Modify `landing.html` in the project root
+2. **Update Assets**: Replace images in `lib/assets/` (uses GitHub raw URLs)
+3. **Deploy Changes**: Copy updated `landing.html` to `docs/index.html`
+4. **Test Locally**: Open `landing.html` in a browser before deploying
+
+```bash
+# Quick deployment command
+cp landing.html docs/index.html
+git add docs/index.html
+git commit -m "Update landing page"
+git push origin main
+```
+
+#### 📊 SEO & Performance
+
+The landing page includes:
+- **SEO Optimized**: Meta tags, structured data, and semantic HTML
+- **Performance**: Lightweight design with fast loading times
+- **Accessibility**: WCAG guidelines compliance
+- **Mobile First**: Responsive design for all devices
 
 ## 🎯 Usage
 
