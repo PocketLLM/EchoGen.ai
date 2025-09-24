@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:echogenai/constants/app_theme.dart';
-import 'package:echogenai/screens/home_screen.dart';
+import 'package:echogenai/screens/auth/auth_flow_screen.dart';
 import 'package:echogenai/utils/preferences_manager.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -45,9 +45,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     
     if (!mounted) return;
     
-    // Navigate to home screen
+    // Navigate to authentication flow
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      MaterialPageRoute(builder: (_) => const AuthFlowScreen()),
     );
   }
   

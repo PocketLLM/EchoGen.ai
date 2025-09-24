@@ -21,6 +21,10 @@ import 'package:share_plus/share_plus.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:echogenai/providers/theme_provider.dart';
+import 'package:echogenai/providers/auth_provider.dart';
+import 'package:echogenai/models/auth_models.dart';
+import 'package:echogenai/screens/profile_screen.dart';
+import 'package:echogenai/screens/auth/auth_flow_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -2699,6 +2703,8 @@ class _SettingsTab extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
 
     return Scaffold(
       appBar: const EchoGenAppBar(
@@ -2710,6 +2716,7 @@ class _SettingsTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            ..._buildAccountOverviewSection(context, authProvider, isDarkMode),
             // App Preferences Section
             _buildSectionHeader(context, 'App Preferences'),
             const SizedBox(height: 12),
@@ -2818,16 +2825,58 @@ class _SettingsTab extends StatelessWidget {
             _buildSettingsCard(
               context,
               [
-                _buildSettingsTile(
-                  context,
-                  icon: Icons.logout_outlined,
-                  title: 'Log Out',
-                  subtitle: 'Sign out of your account',
-                  onTap: () {
-                    _showLogoutDialog(context);
-                  },
-                  isDestructive: true,
-                ),
+                if (user != null) ...[
+                  _buildSettingsTile(
+                    context,
+                    icon: Icons.person_outline,
+                    title: 'Profile & preferences',
+                    subtitle: 'Update your name, bio, and personalisation',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const ProfileScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDivider(context),
+                  _buildSettingsTile(
+                    context,
+                    icon: Icons.shield_moon_outlined,
+                    title: 'Account deletion window',
+                    subtitle: user.pendingAccountDeletion?.isActive == true
+                        ? 'Scheduled for ${_formatDate(user.pendingAccountDeletion?.scheduledFor)} – tap to cancel'
+                        : 'Schedule deletion with a 30-day grace period',
+                    onTap: () {
+                      _showDeletionSheet(context, authProvider, user.pendingAccountDeletion);
+                    },
+                  ),
+                  _buildDivider(context),
+                  _buildSettingsTile(
+                    context,
+                    icon: Icons.logout_outlined,
+                    title: 'Log Out',
+                    subtitle: 'Sign out of your account',
+                    onTap: () {
+                      _showLogoutDialog(context, authProvider);
+                    },
+                    isDestructive: true,
+                  ),
+                ] else ...[
+                  _buildSettingsTile(
+                    context,
+                    icon: Icons.login_outlined,
+                    title: 'Sign in',
+                    subtitle: 'Access your saved content and settings',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const AuthFlowScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ],
             ),
 
@@ -2865,6 +2914,340 @@ class _SettingsTab extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildAccountOverviewSection(
+    BuildContext context,
+    AuthProvider authProvider,
+    bool isDarkMode,
+  ) {
+    final user = authProvider.user;
+    if (user != null) {
+      return <Widget>[
+        _buildAccountCard(context, user, isDarkMode),
+        const SizedBox(height: 24),
+      ];
+    }
+
+    if (authProvider.status == AuthStatus.unauthenticated) {
+      return <Widget>[
+        _buildGuestCard(context, isDarkMode),
+        const SizedBox(height: 24),
+      ];
+    }
+
+    return <Widget>[];
+  }
+
+  Widget _buildAccountCard(
+    BuildContext context,
+    UserProfileModel user,
+    bool isDarkMode,
+  ) {
+    final pendingDeletion = user.pendingAccountDeletion;
+    final gradientColors = isDarkMode
+        ? [AppTheme.primaryDark, AppTheme.primaryBlue]
+        : [AppTheme.primaryBlue, AppTheme.primaryLight];
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: gradientColors),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryBlue.withOpacity(0.15),
+            blurRadius: 32,
+            offset: const Offset(0, 20),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 32,
+            backgroundColor: AppTheme.white.withOpacity(0.2),
+            child: Text(
+              _initialsFromUser(user),
+              style: AppTheme.headingMedium.copyWith(
+                color: AppTheme.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user.fullName?.isNotEmpty == true ? user.fullName! : 'Creator',
+                  style: AppTheme.headingMedium.copyWith(
+                    color: AppTheme.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  user.email,
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.white.withOpacity(0.85),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_month, size: 16, color: AppTheme.white),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Member since ${_formatDate(user.createdAt)}',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.white.withOpacity(0.85),
+                      ),
+                    ),
+                  ],
+                ),
+                if (pendingDeletion?.isActive == true) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'Deletion scheduled for ${_formatDate(pendingDeletion?.scheduledFor)}',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ] else if (!user.onboardingCompleted) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.white.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'Finish onboarding to unlock personalised prompts',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuestCard(BuildContext context, bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDarkMode ? AppTheme.surfaceDark : AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDarkMode ? AppTheme.surfaceVariantDark : AppTheme.border,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Sign in to sync your workspace',
+            style: AppTheme.headingMedium.copyWith(
+              color: isDarkMode ? AppTheme.textPrimaryDark : AppTheme.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Create an account or log in to save preferences, manage API keys, and continue across devices.',
+            style: AppTheme.bodyMedium.copyWith(
+              color: isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _initialsFromUser(UserProfileModel user) {
+    final source = (user.fullName?.isNotEmpty == true ? user.fullName! : user.email).trim();
+    final parts = source.split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
+    if (parts.isEmpty) {
+      return '--';
+    }
+    final initials = parts.take(2).map((part) => part[0].toUpperCase()).join();
+    return initials.padRight(2, '-');
+  }
+
+  void _showDeletionSheet(
+    BuildContext context,
+    AuthProvider authProvider,
+    AccountDeletionStatusModel? status,
+  ) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final isActive = status?.isActive == true;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDarkMode ? AppTheme.surfaceDark : AppTheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      builder: (modalContext) {
+        bool isProcessing = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: (isActive ? AppTheme.secondaryYellow : AppTheme.primaryBlue)
+                                .withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isActive ? Icons.warning_amber_rounded : Icons.schedule_rounded,
+                            color: isActive ? AppTheme.secondaryYellow : AppTheme.primaryBlue,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            isActive
+                                ? 'Account deletion scheduled'
+                                : 'Schedule account deletion',
+                            style: AppTheme.headingMedium.copyWith(
+                              color: isDarkMode
+                                  ? AppTheme.textPrimaryDark
+                                  : AppTheme.textPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      isActive
+                          ? 'Your account is currently scheduled for deletion on ${_formatDate(status?.scheduledFor)}. Logging back in before that date or cancelling here will keep everything intact.'
+                          : 'We\'ll wait 30 days before permanently removing your podcasts, API keys, and settings. You can cancel anytime by signing back in.',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: isDarkMode
+                            ? AppTheme.textSecondaryDark
+                            : AppTheme.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isProcessing
+                            ? null
+                            : () async {
+                                setState(() => isProcessing = true);
+                                try {
+                                  if (isActive) {
+                                    await authProvider.cancelAccountDeletion();
+                                  } else {
+                                    await authProvider.scheduleAccountDeletion();
+                                  }
+                                  Navigator.of(modalContext).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        isActive
+                                            ? 'Account deletion request cancelled'
+                                            : 'Account scheduled for deletion in 30 days',
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                } on ApiException catch (error) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(error.message),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                } finally {
+                                  setState(() => isProcessing = false);
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              isActive ? AppTheme.secondaryRed : AppTheme.primaryBlue,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: isProcessing
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(isActive ? 'Cancel deletion' : 'Schedule deletion'),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(modalContext).pop(),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _formatDate(DateTime? dateTime) {
+    if (dateTime == null) {
+      return '—';
+    }
+    final local = dateTime.toLocal();
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[local.month - 1]} ${local.day}, ${local.year}';
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {
@@ -3272,13 +3655,14 @@ class _SettingsTab extends StatelessWidget {
 
 
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final navigator = Navigator.of(context);
 
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -3298,7 +3682,7 @@ class _SettingsTab extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(
                 'Cancel',
                 style: AppTheme.bodyMedium.copyWith(
@@ -3307,13 +3691,12 @@ class _SettingsTab extends StatelessWidget {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // TODO: Implement logout functionality
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Logout functionality not implemented yet'),
-                  ),
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                await authProvider.signOut();
+                navigator.pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const AuthFlowScreen()),
+                  (_) => false,
                 );
               },
               style: ElevatedButton.styleFrom(

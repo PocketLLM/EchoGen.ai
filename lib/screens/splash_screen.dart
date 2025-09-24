@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:echogenai/constants/app_theme.dart';
 import 'package:echogenai/screens/onboarding_screen.dart';
 import 'package:echogenai/screens/home_screen.dart';
+import 'package:echogenai/screens/auth/auth_flow_screen.dart';
+import 'package:echogenai/screens/user_onboarding_screen.dart';
 import 'package:echogenai/utils/preferences_manager.dart';
+import 'package:echogenai/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,31 +44,50 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
   
   Future<void> _checkOnboardingStatus() async {
-    // Wait for 2.5 seconds to show splash screen
     await Future.delayed(const Duration(milliseconds: 2500));
-    
+
     if (!mounted) return;
-    
-    bool onboardingShown = false;
-    
-    try {
-      // Check if onboarding has been shown
-      onboardingShown = await PreferencesManager.isOnboardingShown();
-    } catch (e) {
-      // If there's an error, default to showing onboarding
-      debugPrint('Error checking onboarding status: $e');
-      onboardingShown = false;
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // Allow any final bootstrap updates to settle
+    if (authProvider.status == AuthStatus.unknown) {
+      await Future.delayed(const Duration(milliseconds: 300));
     }
-    
-    // Navigate to appropriate screen
+
     if (!mounted) return;
-    
-    if (onboardingShown) {
+
+    final status = authProvider.status;
+
+    if (status == AuthStatus.authenticated) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
+      return;
+    }
+
+    if (status == AuthStatus.onboardingRequired) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const UserOnboardingScreen()),
+      );
+      return;
+    }
+
+    bool onboardingShown = false;
+    try {
+      onboardingShown = await PreferencesManager.isOnboardingShown();
+    } catch (e) {
+      debugPrint('Error checking onboarding status: $e');
+      onboardingShown = false;
+    }
+
+    if (!mounted) return;
+
+    if (onboardingShown) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const AuthFlowScreen()),
+      );
     } else {
-      // Always navigate to onboarding screen if there's an error or onboarding hasn't been shown
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const OnboardingScreen()),
       );

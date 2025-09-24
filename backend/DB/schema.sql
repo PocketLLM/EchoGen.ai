@@ -16,6 +16,9 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
   avatar_url text,
+  bio text,
+  preferences jsonb not null default '{}'::jsonb,
+  onboarding_completed boolean not null default false,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
@@ -24,6 +27,28 @@ drop trigger if exists set_updated_at_profiles on public.profiles;
 create trigger set_updated_at_profiles
 before update on public.profiles
 for each row execute procedure public.set_updated_at();
+
+-- account deletion requests (soft delete window)
+create table if not exists public.account_deletion_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  requested_at timestamptz not null default timezone('utc', now()),
+  scheduled_for timestamptz not null,
+  cancelled_at timestamptz,
+  completed_at timestamptz
+);
+create index if not exists account_deletion_requests_user_id_idx on public.account_deletion_requests(user_id);
+create index if not exists account_deletion_requests_scheduled_idx on public.account_deletion_requests(scheduled_for);
+
+-- onboarding questionnaire responses
+create table if not exists public.onboarding_responses (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  responses jsonb not null,
+  completed_at timestamptz not null,
+  created_at timestamptz not null default timezone('utc', now())
+);
+create index if not exists onboarding_responses_user_id_idx on public.onboarding_responses(user_id);
 
 -- user sessions
 create table if not exists public.user_sessions (

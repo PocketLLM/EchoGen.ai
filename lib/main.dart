@@ -4,6 +4,7 @@ import 'package:echogenai/screens/splash_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'package:echogenai/providers/auth_provider.dart';
 import 'package:echogenai/providers/theme_provider.dart';
 import 'package:echogenai/services/global_audio_manager.dart';
 import 'package:audio_service/audio_service.dart';
@@ -34,9 +35,13 @@ void main() async {
       DeviceOrientation.portraitDown,
     ]);
 
-    // Initialize theme provider
+    // Initialize providers
     final themeProvider = ThemeProvider();
-    await themeProvider.initialize();
+    final authProvider = AuthProvider();
+    await Future.wait([
+      themeProvider.initialize(),
+      authProvider.bootstrap(),
+    ]);
 
     // Initialize audio session
     try {
@@ -73,8 +78,11 @@ void main() async {
 
     // Run the app
     runApp(
-      ChangeNotifierProvider.value(
-        value: themeProvider,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: themeProvider),
+          ChangeNotifierProvider.value(value: authProvider),
+        ],
         child: const MyApp(),
       ),
     );
@@ -100,7 +108,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return MaterialApp(
       title: 'EchoGen.ai',
       debugShowCheckedModeBanner: false,
