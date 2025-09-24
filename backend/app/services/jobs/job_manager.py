@@ -5,9 +5,9 @@ import asyncio
 from datetime import datetime
 from typing import Any, Awaitable, Callable, Dict
 
-from ..core.database import SupabaseAsyncClient
-from ..schemas.jobs import JobCreate, JobStatus
-from ..utils.id_generator import generate_job_id
+from ...core.database import SupabaseAsyncClient
+from ...schemas.jobs import JobCreate, JobStatus
+from ...utils.id_generator import generate_job_id
 
 JOBS_TABLE = "processing_jobs"
 
