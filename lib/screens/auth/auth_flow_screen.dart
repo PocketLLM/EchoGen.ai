@@ -239,40 +239,67 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
 
   Widget _buildModeSwitcher(ThemeData theme) {
     final isSignIn = _mode == _AuthMode.signIn;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: AppTheme.primaryBlue.withOpacity(0.08),
+
+    final toggleChips = Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.primaryBlue.withOpacity(0.08),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _ModeChip(
+            label: 'Login',
+            isActive: isSignIn,
+            onTap: () {
+              if (!isSignIn) _toggleMode();
+            },
           ),
-          child: Row(
+          const SizedBox(width: 8),
+          _ModeChip(
+            label: 'Sign Up',
+            isActive: !isSignIn,
+            onTap: () {
+              if (isSignIn) _toggleMode();
+            },
+          ),
+        ],
+      ),
+    );
+
+    final switchTextButton = TextButton(
+      onPressed: _toggleMode,
+      child: Text(isSignIn ? 'Need an account?' : 'Have an account?'),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 420;
+
+        if (isCompact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _ModeChip(
-                label: 'Login',
-                isActive: isSignIn,
-                onTap: () {
-                  if (!isSignIn) _toggleMode();
-                },
-              ),
-              const SizedBox(width: 8),
-              _ModeChip(
-                label: 'Sign Up',
-                isActive: !isSignIn,
-                onTap: () {
-                  if (isSignIn) _toggleMode();
-                },
+              toggleChips,
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: switchTextButton,
               ),
             ],
-          ),
-        ),
-        TextButton(
-          onPressed: _toggleMode,
-          child: Text(isSignIn ? 'Need an account?' : 'Have an account?'),
-        ),
-      ],
+          );
+        }
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(child: toggleChips),
+            const SizedBox(width: 16),
+            switchTextButton,
+          ],
+        );
+      },
     );
   }
 
@@ -311,15 +338,25 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
                 : _buildComingSoonPanel(),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Checkbox(
-                value: _rememberMe,
-                onChanged: (value) => setState(() => _rememberMe = value ?? true),
-              ),
-              const Text('Remember me'),
-              const Spacer(),
-              TextButton(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 420;
+
+              final rememberMeRow = Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Checkbox(
+                    value: _rememberMe,
+                    visualDensity: VisualDensity.compact,
+                    onChanged: (value) =>
+                        setState(() => _rememberMe = value ?? true),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text('Remember me'),
+                ],
+              );
+
+              final forgotPasswordButton = TextButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -329,8 +366,29 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
                   );
                 },
                 child: const Text('Forgot password?'),
-              ),
-            ],
+              );
+
+              if (isCompact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    rememberMeRow,
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: forgotPasswordButton,
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  rememberMeRow,
+                  const Spacer(),
+                  forgotPasswordButton,
+                ],
+              );
+            },
           ),
           const SizedBox(height: 12),
           TweenAnimationBuilder<double>(
@@ -565,13 +623,57 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
           style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
         ),
         const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            _SocialLoginButton(label: 'Google', icon: Icons.g_mobiledata),
-            _SocialLoginButton(label: 'Facebook', icon: Icons.facebook),
-            _SocialLoginButton(label: 'Apple', icon: Icons.apple),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 420;
+
+            if (isCompact) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: const [
+                  _FullWidthSocialButton(
+                    label: 'Google',
+                    icon: Icons.g_mobiledata,
+                  ),
+                  SizedBox(height: 12),
+                  _FullWidthSocialButton(
+                    label: 'Facebook',
+                    icon: Icons.facebook,
+                  ),
+                  SizedBox(height: 12),
+                  _FullWidthSocialButton(
+                    label: 'Apple',
+                    icon: Icons.apple,
+                  ),
+                ],
+              );
+            }
+
+            return Row(
+              children: const [
+                Expanded(
+                  child: _SocialLoginButton(
+                    label: 'Google',
+                    icon: Icons.g_mobiledata,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: _SocialLoginButton(
+                    label: 'Facebook',
+                    icon: Icons.facebook,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: _SocialLoginButton(
+                    label: 'Apple',
+                    icon: Icons.apple,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -711,31 +813,44 @@ class _SocialLoginButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Opacity(
-        opacity: 0.6,
-        child: OutlinedButton.icon(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('$label login is coming soon!'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          },
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+    return Opacity(
+      opacity: 0.6,
+      child: OutlinedButton.icon(
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$label login is coming soon!'),
+              behavior: SnackBarBehavior.floating,
             ),
-          ),
-          icon: Icon(icon, color: AppTheme.textSecondary),
-          label: Text(
-            label,
-            style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+          );
+        },
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
+        icon: Icon(icon, color: AppTheme.textSecondary),
+        label: Text(
+          label,
+          style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+        ),
       ),
+    );
+  }
+}
+
+class _FullWidthSocialButton extends StatelessWidget {
+  const _FullWidthSocialButton({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: _SocialLoginButton(label: label, icon: icon),
     );
   }
 }
