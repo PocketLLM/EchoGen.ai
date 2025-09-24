@@ -30,7 +30,7 @@ class WebScrapingService {
 
     try {
       final response = await http.post(
-        Uri.parse('$_firecrawlBaseUrl/scrape'),
+        Uri.parse('${WebScrapingService._firecrawlBaseUrl}/scrape'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $apiKey',
@@ -77,7 +77,7 @@ class WebScrapingService {
 
     try {
       final response = await http.post(
-        Uri.parse('$_firecrawlBaseUrl/batch/scrape'),
+        Uri.parse('${WebScrapingService._firecrawlBaseUrl}/batch/scrape'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $apiKey',
@@ -125,7 +125,7 @@ class WebScrapingService {
     try {
       // Start scrape job with correct Hyperbrowser API format
       final startResponse = await http.post(
-        Uri.parse('$_hyperbrowserBaseUrl/scrape'),
+        Uri.parse('${WebScrapingService._hyperbrowserBaseUrl}/scrape'),
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
@@ -175,7 +175,7 @@ class WebScrapingService {
 
     try {
       final response = await http.post(
-        Uri.parse('$_hyperbrowserBaseUrl/scrape/batch'),
+        Uri.parse('${WebScrapingService._hyperbrowserBaseUrl}/scrape/batch'),
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
@@ -196,7 +196,8 @@ class WebScrapingService {
           service: 'hyperbrowser',
           urls: urls,
           status: 'pending',
-          checkUrl: '$_hyperbrowserBaseUrl/scrape/batch/${data['jobId']}',
+          checkUrl:
+              '${WebScrapingService._hyperbrowserBaseUrl}/scrape/batch/${data['jobId']}',
         );
       } else if (response.statusCode == 401) {
         throw Exception('Invalid Hyperbrowser API key. Please check your configuration.');
@@ -225,7 +226,7 @@ class WebScrapingService {
 
       try {
         final response = await http.get(
-          Uri.parse('$_hyperbrowserBaseUrl/scrape/$jobId'),
+          Uri.parse('${WebScrapingService._hyperbrowserBaseUrl}/scrape/$jobId'),
           headers: {
             'x-api-key': apiKey,
           },
