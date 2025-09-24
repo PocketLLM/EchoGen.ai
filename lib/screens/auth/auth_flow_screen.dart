@@ -240,7 +240,7 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
   Widget _buildModeSwitcher(ThemeData theme) {
     final isSignIn = _mode == _AuthMode.signIn;
 
-    final toggleChips = Container(
+    return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
@@ -266,40 +266,6 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
           ),
         ],
       ),
-    );
-
-    final switchTextButton = TextButton(
-      onPressed: _toggleMode,
-      child: Text(isSignIn ? 'Need an account?' : 'Have an account?'),
-    );
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 420;
-
-        if (isCompact) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              toggleChips,
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: switchTextButton,
-              ),
-            ],
-          );
-        }
-
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(child: toggleChips),
-            const SizedBox(width: 16),
-            switchTextButton,
-          ],
-        );
-      },
     );
   }
 
@@ -530,7 +496,7 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
         children: [
           Expanded(
             child: _CredentialChip(
-              label: 'Phone Number',
+              label: 'Phone No',
               icon: Icons.phone_rounded,
               isActive: _credentialType == _CredentialType.phone,
               onTap: () => _handleCredentialTap(_CredentialType.phone),
