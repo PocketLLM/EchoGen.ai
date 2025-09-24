@@ -14,10 +14,42 @@ Stores lightweight profile information that augments `auth.users`.
 | `id` | `uuid` | Primary key, references `auth.users.id` |
 | `full_name` | `text` | Display name |
 | `avatar_url` | `text` | Optional avatar (from Storage) |
+| `bio` | `text` | Short personal bio |
+| `preferences` | `jsonb` | Serialized user preferences and UI settings |
+| `onboarding_completed` | `boolean` | Marks whether onboarding questions were completed |
 | `created_at` | `timestamptz` | Default `now()` |
 | `updated_at` | `timestamptz` | Default `now()` |
 
 Row Level Security (RLS): enable and grant `select, update` to authenticated users on their own row.
+
+### `onboarding_responses`
+
+Captures the structured answers to the post-sign-in onboarding survey.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | Primary key |
+| `user_id` | `uuid` | FK → `auth.users` |
+| `responses` | `jsonb` | Array of `{questionId, question, answer}` objects |
+| `completed_at` | `timestamptz` | When the user submitted the survey |
+| `created_at` | `timestamptz` | Default `now()` |
+
+Policies should restrict reads/writes to the owning `user_id`.
+
+### `account_deletion_requests`
+
+Implements the 30-day "pending deletion" window before hard-deleting a user account.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | `uuid` | Primary key |
+| `user_id` | `uuid` | FK → `auth.users` |
+| `requested_at` | `timestamptz` | When the user initiated deletion |
+| `scheduled_for` | `timestamptz` | When the account should be purged |
+| `cancelled_at` | `timestamptz` | Populated when the request is cancelled |
+| `completed_at` | `timestamptz` | Filled by a background worker once deletion is executed |
+
+Policies should allow owners to view their request and mark cancellations.
 
 ### `user_sessions`
 

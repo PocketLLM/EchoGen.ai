@@ -35,8 +35,8 @@ class SupabaseAsyncClient:
         self._auth_client = httpx.AsyncClient(
             base_url=settings.supabase_auth_url,
             headers={
-                "apikey": settings.supabase_service_role_key,
-                "Authorization": f"Bearer {settings.supabase_service_role_key}",
+                "apikey": settings.supabase_anon_key,
+                "Authorization": f"Bearer {settings.supabase_anon_key}",
                 "Content-Type": "application/json",
             },
             timeout=30.0,

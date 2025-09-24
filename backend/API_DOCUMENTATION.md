@@ -6,11 +6,19 @@ JWTs obtained during sign-in.
 
 ## Authentication
 
+The authentication API wraps Supabase Auth and augments it with profile management,
+onboarding, and delayed account deletion logic.
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/v1/auth/signup` | Create a Supabase user and return session tokens |
-| `POST` | `/api/v1/auth/signin` | Authenticate a user via email/password |
-| `GET`  | `/api/v1/auth/me` | Return the authenticated user's profile |
+| `POST` | `/api/v1/auth/signup` | Create a Supabase user (email or phone) and return session tokens |
+| `POST` | `/api/v1/auth/signin` | Authenticate via email/phone + password and cancel pending deletions |
+| `GET`  | `/api/v1/auth/me` | Decode the bearer token and return the cached profile |
+| `GET`  | `/api/v1/auth/users/{id}` | Fetch the freshest profile data from Supabase |
+| `PATCH` | `/api/v1/auth/profile` | Update profile fields (name, avatar, bio, preferences) |
+| `POST` | `/api/v1/auth/onboarding` | Persist onboarding survey responses |
+| `DELETE` | `/api/v1/auth/account` | Schedule account deletion in 30 days |
+| `POST` | `/api/v1/auth/account/cancel` | Cancel a pending deletion request |
 | `POST` | `/api/v1/auth/signout` | Invalidate the current Supabase session |
 
 ### Sign-up
@@ -20,11 +28,28 @@ POST /api/v1/auth/signup
 Content-Type: application/json
 
 {
+  "method": "email",
   "email": "creator@example.com",
-  "password": "P@ssw0rd!",
+  "password": "Sup3rSecure!",
   "fullName": "Podcast Creator"
 }
 ```
+
+To sign up with a phone number supply the SMS-ready number and password:
+
+```http
+POST /api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "method": "phone",
+  "phoneNumber": "+13334445555",
+  "password": "Sup3rSecure!"
+}
+```
+
+> **Coming soon** – set `"method": "google" | "apple" | "github"` to receive a
+> `501 Not Implemented` response for roadmap authentication options.
 
 Response includes the Supabase user and session tokens:
 
@@ -34,7 +59,11 @@ Response includes the Supabase user and session tokens:
     "id": "uuid",
     "email": "creator@example.com",
     "fullName": "Podcast Creator",
-    "created_at": "2024-05-18T10:25:00+00:00"
+    "created_at": "2024-05-18T10:25:00+00:00",
+    "avatarUrl": null,
+    "bio": null,
+    "onboardingCompleted": false,
+    "pendingAccountDeletion": null
   },
   "session": {
     "access_token": "<jwt>",
@@ -49,6 +78,107 @@ Use the access token for authorised requests:
 ```
 Authorization: Bearer <access_token>
 ```
+
+### Sign-in
+
+```http
+POST /api/v1/auth/signin
+Authorization: Bearer <none>
+Content-Type: application/json
+
+{
+  "method": "email",
+  "email": "creator@example.com",
+  "password": "Sup3rSecure!"
+}
+```
+
+When a user signs in successfully the backend automatically cancels any pending account
+deletion requests created in the previous 30-day window.
+
+Phone logins also accept a password and route through Supabase's password grant:
+
+```http
+POST /api/v1/auth/signin
+Authorization: Bearer <none>
+Content-Type: application/json
+
+{
+  "method": "phone",
+  "phoneNumber": "+13334445555",
+  "password": "Sup3rSecure!"
+}
+```
+
+### Fetch profile & manage preferences
+
+```http
+GET /api/v1/auth/users/{user_id}
+Authorization: Bearer <access_token>
+```
+
+```http
+PATCH /api/v1/auth/profile
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "fullName": "Echo Creator",
+  "avatarUrl": "https://cdn.example.com/profile/123.png",
+  "bio": "Community host and AI storyteller",
+  "preferences": {
+    "primaryVoice": "serene",
+    "preferredLength": "10_minute",
+    "newsletterOptIn": true
+  }
+}
+```
+
+### Onboarding survey
+
+Triggered after the first successful sign-in.
+
+```http
+POST /api/v1/auth/onboarding
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "responses": [
+    {
+      "questionId": "format",
+      "question": "What format inspires you the most?",
+      "answer": "Interview"
+    },
+    {
+      "questionId": "cadence",
+      "question": "How frequently do you plan to publish?",
+      "answer": "Weekly"
+    }
+  ]
+}
+```
+
+### Account deletion window
+
+```http
+DELETE /api/v1/auth/account
+Authorization: Bearer <access_token>
+```
+
+Response:
+
+```json
+{
+  "scheduled_for": "2024-06-18T10:25:00+00:00",
+  "requested_at": "2024-05-19T10:25:00+00:00",
+  "cancelled_at": null,
+  "completed_at": null
+}
+```
+
+Any subsequent sign-in before the `scheduled_for` timestamp will automatically cancel the
+request. Users may also call `POST /api/v1/auth/account/cancel` directly.
 
 ## API Key Vault
 
