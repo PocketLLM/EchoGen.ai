@@ -15,8 +15,8 @@ class TokenStorage {
 
   static FlutterSecureStorage _buildSecureStorage() {
     const aOptions = AndroidOptions(encryptedSharedPreferences: true);
-    const iOptions = IOSOptions(accessibility: KeychainAccessibility.firstUnlock);
-    const mOptions = MacOsOptions(accessibility: KeychainAccessibility.firstUnlock);
+    const iOptions = IOSOptions(accessibility: KeychainAccessibility.first_unlock);
+    const mOptions = MacOsOptions(accessibility: KeychainAccessibility.first_unlock);
     const wOptions = WindowsOptions();
 
     return FlutterSecureStorage(

@@ -582,7 +582,7 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
       return 'Please enter your email';
     }
     final email = value.trim();
-    const emailPattern = '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+\\$';
+    const emailPattern = r'^[^@\s]+@[^@\s]+\.[^@\s]+$';
     if (!RegExp(emailPattern).hasMatch(email)) {
       return 'Enter a valid email';
     }
