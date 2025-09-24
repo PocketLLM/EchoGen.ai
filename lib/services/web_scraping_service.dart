@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+const String _firecrawlBaseUrl = 'https://api.firecrawl.dev/v1';
+const String _hyperbrowserBaseUrl = 'https://api.hyperbrowser.ai/api';
+
 class WebScrapingService {
-  static const String _firecrawlBaseUrl = 'https://api.firecrawl.dev/v1';
-  static const String _hyperbrowserBaseUrl = 'https://api.hyperbrowser.ai/api';
 
   // Get API keys from storage
   Future<String?> _getApiKey(String service) async {
@@ -30,7 +31,7 @@ class WebScrapingService {
 
     try {
       final response = await http.post(
-        Uri.parse('${WebScrapingService._firecrawlBaseUrl}/scrape'),
+        Uri.parse('$_firecrawlBaseUrl/scrape'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $apiKey',
@@ -77,7 +78,7 @@ class WebScrapingService {
 
     try {
       final response = await http.post(
-        Uri.parse('${WebScrapingService._firecrawlBaseUrl}/batch/scrape'),
+        Uri.parse('$_firecrawlBaseUrl/batch/scrape'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $apiKey',
@@ -125,7 +126,7 @@ class WebScrapingService {
     try {
       // Start scrape job with correct Hyperbrowser API format
       final startResponse = await http.post(
-        Uri.parse('${WebScrapingService._hyperbrowserBaseUrl}/scrape'),
+        Uri.parse('$_hyperbrowserBaseUrl/scrape'),
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
@@ -175,7 +176,7 @@ class WebScrapingService {
 
     try {
       final response = await http.post(
-        Uri.parse('${WebScrapingService._hyperbrowserBaseUrl}/scrape/batch'),
+        Uri.parse('$_hyperbrowserBaseUrl/scrape/batch'),
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
@@ -196,8 +197,7 @@ class WebScrapingService {
           service: 'hyperbrowser',
           urls: urls,
           status: 'pending',
-          checkUrl:
-              '${WebScrapingService._hyperbrowserBaseUrl}/scrape/batch/${data['jobId']}',
+          checkUrl: '$_hyperbrowserBaseUrl/scrape/batch/${data['jobId']}',
         );
       } else if (response.statusCode == 401) {
         throw Exception('Invalid Hyperbrowser API key. Please check your configuration.');
@@ -226,7 +226,7 @@ class WebScrapingService {
 
       try {
         final response = await http.get(
-          Uri.parse('${WebScrapingService._hyperbrowserBaseUrl}/scrape/$jobId'),
+          Uri.parse('$_hyperbrowserBaseUrl/scrape/$jobId'),
           headers: {
             'x-api-key': apiKey,
           },
