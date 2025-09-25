@@ -56,5 +56,4 @@ app.*.map.json
 *Hyperbrowser.md
 *gemini.md
 *firecrawl.md
-backend/.env
 
