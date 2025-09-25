@@ -61,8 +61,9 @@ Render will build directly from your Git repository. Ensure the following before
 ## 4. Verify the Deployment
 
 1. Once the service status is **Live**, Render will assign a URL like `https://echogen-backend.onrender.com`.
-2. Visit `https://<your-service>.onrender.com/docs` to confirm the FastAPI Swagger UI loads.
-3. Use the "Authorize" button in Swagger to test authenticated endpoints with a Supabase JWT.
+2. Visit `https://<your-service>.onrender.com/health` to confirm the health endpoint returns a successful response.
+3. Visit `https://<your-service>.onrender.com/docs` to confirm the FastAPI Swagger UI loads.
+4. Use the "Authorize" button in Swagger to test authenticated endpoints with a Supabase JWT.
 4. If you plan to use a custom domain, add it under **Settings → Custom Domains** and follow Render's DNS instructions.
 
 ## 5. Configure the Flutter App
@@ -79,7 +80,7 @@ Update the Flutter client so it points to the deployed backend:
 - Enable **Auto Deploy** on the Render service so pushes to the selected branch trigger a rebuild.
 - Use Render's **Deploy Hooks** if you prefer to trigger deployments manually or from CI.
 - Monitor logs under **Logs** in the Render dashboard or forward them to an external service (Datadog, Logtail, etc.).
-- Configure **Health Checks** (Settings → Health Checks) to probe `/health` or another lightweight endpoint once you add one, ensuring the service is restarted if it becomes unresponsive.
+- Configure **Health Checks** (Settings → Health Checks) to probe `/health` endpoint, ensuring the service is restarted if it becomes unresponsive. Set the health check path to `/health` and expected status code to `200`.
 
 ## 7. Troubleshooting
 

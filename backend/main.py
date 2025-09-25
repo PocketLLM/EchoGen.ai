@@ -16,8 +16,26 @@ settings = get_settings()
 configure_logging()
 logger = get_logger(__name__)
 
-app = FastAPI(title=settings.project_name, version="0.1.0")
+app = FastAPI(
+    title=settings.project_name, 
+    version="0.1.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
 register_middlewares(app, settings)
+
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring and load balancers."""
+    return {
+        "status": "healthy",
+        "service": "EchoGen.ai API",
+        "version": "0.1.0",
+        "environment": settings.environment
+    }
+
+
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 
 
