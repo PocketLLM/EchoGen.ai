@@ -1,6 +1,7 @@
 """Service for interacting with Supabase Auth."""
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
 from typing import Any, Dict, Optional
 
@@ -137,47 +138,42 @@ class AuthService:
         if completed_at.tzinfo is None:
             completed_at = completed_at.replace(tzinfo=UTC)
         completed_at_utc = completed_at.astimezone(UTC)
+
         responses_payload = [
             response.model_dump(by_alias=True) for response in submission.responses
         ]
-        onboarding_preferences = {
-            "completedAt": completed_at_utc.isoformat(),
+
+        profile_row = await self._ensure_profile_row(user_id, None)
+        preferences = self._parse_preferences(profile_row.get("preferences"))
+        preferences["onboarding"] = {
             "responses": responses_payload,
+            "completedAt": completed_at_utc.isoformat(),
         }
-        payload = {
+
+        onboarding_payload = {
             "user_id": user_id,
             "responses": responses_payload,
             "completed_at": completed_at_utc.isoformat(),
         }
+
         try:
-            await self._client.insert("onboarding_responses", payload)
-        except httpx.HTTPStatusError as exc:
-            if exc.response.status_code == status.HTTP_404_NOT_FOUND:
-                logger.warning(
-                    "onboarding_responses table not available; storing answers in profile only",
-                    user_id=user_id,
-                    status_code=exc.response.status_code,
-                )
-            else:
-                raise self._translate_supabase_error(
-                    "Unable to save onboarding responses", exc
-                ) from exc
-        try:
-            await self._client.update(
-                "profiles",
-                {
-                    "onboarding_completed": True,
-                    "updated_at": datetime.now(UTC).isoformat(),
-                    "preferences": await self._merge_onboarding_preferences(
-                        user_id, onboarding_preferences
-                    ),
-                },
-                filters={"id": f"eq.{user_id}"},
+            await self._client.insert("onboarding_responses", onboarding_payload)
+        except httpx.HTTPError as exc:
+            logger.error(
+                "Failed to persist onboarding responses",
+                user_id=user_id,
+                error=str(exc),
             )
-        except httpx.HTTPStatusError as exc:
-            raise self._translate_supabase_error(
-                "Unable to update onboarding status", exc
-            ) from exc
+
+        await self._client.update(
+            "profiles",
+            {
+                "onboarding_completed": True,
+                "updated_at": datetime.now(UTC).isoformat(),
+                "preferences": preferences,
+            },
+            filters={"id": f"eq.{user_id}"},
+        )
         auth_user = await self._fetch_auth_user(user_id)
         return await self._build_user_profile(auth_user)
 
@@ -350,20 +346,12 @@ class AuthService:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
     @staticmethod
-    def _translate_supabase_error(message: str, exc: httpx.HTTPStatusError) -> HTTPException:
-        detail = message
-        response = exc.response
-        try:
-            payload = response.json()
-        except ValueError:
-            payload = None
-        if isinstance(payload, dict):
-            detail = (
-                payload.get("message")
-                or payload.get("error_description")
-                or payload.get("details")
-                or message
-            )
-        elif response.text:
-            detail = f"{message}: {response.text}"
-        return HTTPException(status_code=response.status_code, detail=detail)
+    def _parse_preferences(value: Any) -> Dict[str, Any]:
+        if isinstance(value, dict):
+            return dict(value)
+        if isinstance(value, str) and value:
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                logger.warning("Failed to decode profile preferences JSON", raw=value)
+        return {}
