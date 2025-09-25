@@ -143,9 +143,10 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    final theme = Theme.of(context);
 
-    return Scaffold(
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: LayoutBuilder(
@@ -164,7 +165,7 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
                   curve: Curves.easeInOut,
                   width: cardWidth,
                   decoration: BoxDecoration(
-                    color: theme.cardColor,
+                    color: AppTheme.surface,
                     borderRadius: BorderRadius.circular(32),
                     boxShadow: [
                       BoxShadow(
@@ -182,9 +183,9 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildHeader(theme),
+                        _buildHeader(),
                         const SizedBox(height: 24),
-                        _buildModeSwitcher(theme),
+                        _buildModeSwitcher(),
                         const SizedBox(height: 24),
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 300),
@@ -195,7 +196,7 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
                               : _buildSignUpForm(context, authProvider),
                         ),
                         const SizedBox(height: 24),
-                        _buildSocialLogins(theme),
+                        _buildSocialLogins(),
                       ],
                     ),
                   ),
@@ -205,10 +206,10 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
           },
         ),
       ),
-    );
+    ));
   }
 
-  Widget _buildHeader(ThemeData theme) {
+  Widget _buildHeader() {
     final isSignIn = _mode == _AuthMode.signIn;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,7 +238,7 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
     );
   }
 
-  Widget _buildModeSwitcher(ThemeData theme) {
+  Widget _buildModeSwitcher() {
     final isSignIn = _mode == _AuthMode.signIn;
 
     return Container(
@@ -579,7 +580,7 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
     );
   }
 
-  Widget _buildSocialLogins(ThemeData theme) {
+  Widget _buildSocialLogins() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [

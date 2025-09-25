@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.light;
   
   ThemeMode get themeMode => _themeMode;
   
@@ -16,7 +16,7 @@ class ThemeProvider extends ChangeNotifier {
       if (savedThemeMode != null) {
         _themeMode = ThemeMode.values.firstWhere(
           (mode) => mode.toString() == savedThemeMode,
-          orElse: () => ThemeMode.system,
+          orElse: () => ThemeMode.light,
         );
       }
     } catch (e) {
