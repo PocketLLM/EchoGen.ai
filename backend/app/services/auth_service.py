@@ -4,10 +4,12 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Any, Dict, Optional
 
+import httpx
 from fastapi import HTTPException, status
 
 from ..core.config import Settings
 from ..core.database import SupabaseAsyncClient
+from ..core.logging import get_logger
 from ..schemas.auth import (
     AccountDeletionStatus,
     AuthMethod,
@@ -20,6 +22,9 @@ from ..schemas.auth import (
     UserProfile,
     VerifyTokenResponse,
 )
+
+
+logger = get_logger(__name__)
 
 
 class AuthService:
@@ -131,20 +136,48 @@ class AuthService:
         completed_at = submission.completed_at
         if completed_at.tzinfo is None:
             completed_at = completed_at.replace(tzinfo=UTC)
+        completed_at_utc = completed_at.astimezone(UTC)
+        responses_payload = [
+            response.model_dump(by_alias=True) for response in submission.responses
+        ]
+        onboarding_preferences = {
+            "completedAt": completed_at_utc.isoformat(),
+            "responses": responses_payload,
+        }
         payload = {
             "user_id": user_id,
-            "responses": [response.model_dump(by_alias=True) for response in submission.responses],
-            "completed_at": completed_at.astimezone(UTC).isoformat(),
+            "responses": responses_payload,
+            "completed_at": completed_at_utc.isoformat(),
         }
-        await self._client.insert("onboarding_responses", payload)
-        await self._client.update(
-            "profiles",
-            {
-                "onboarding_completed": True,
-                "updated_at": datetime.now(UTC).isoformat(),
-            },
-            filters={"id": f"eq.{user_id}"},
-        )
+        try:
+            await self._client.insert("onboarding_responses", payload)
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == status.HTTP_404_NOT_FOUND:
+                logger.warning(
+                    "onboarding_responses table not available; storing answers in profile only",
+                    user_id=user_id,
+                    status_code=exc.response.status_code,
+                )
+            else:
+                raise self._translate_supabase_error(
+                    "Unable to save onboarding responses", exc
+                ) from exc
+        try:
+            await self._client.update(
+                "profiles",
+                {
+                    "onboarding_completed": True,
+                    "updated_at": datetime.now(UTC).isoformat(),
+                    "preferences": await self._merge_onboarding_preferences(
+                        user_id, onboarding_preferences
+                    ),
+                },
+                filters={"id": f"eq.{user_id}"},
+            )
+        except httpx.HTTPStatusError as exc:
+            raise self._translate_supabase_error(
+                "Unable to update onboarding status", exc
+            ) from exc
         auth_user = await self._fetch_auth_user(user_id)
         return await self._build_user_profile(auth_user)
 
@@ -234,6 +267,17 @@ class AuthService:
             pending_account_deletion=deletion_status,
         )
 
+    async def _merge_onboarding_preferences(
+        self, user_id: str, onboarding_preferences: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        profile_row = await self._ensure_profile_row(user_id, None)
+        existing_preferences = profile_row.get("preferences") if profile_row else {}
+        if not isinstance(existing_preferences, dict):
+            existing_preferences = {}
+        merged_preferences = dict(existing_preferences)
+        merged_preferences["onboarding"] = onboarding_preferences
+        return merged_preferences
+
     async def _ensure_profile_row(self, user_id: str, full_name: Optional[str]) -> Dict[str, Any]:
         existing = await self._fetch_profile_row(user_id)
         if existing:
@@ -304,3 +348,22 @@ class AuthService:
         if not value:
             return None
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+    @staticmethod
+    def _translate_supabase_error(message: str, exc: httpx.HTTPStatusError) -> HTTPException:
+        detail = message
+        response = exc.response
+        try:
+            payload = response.json()
+        except ValueError:
+            payload = None
+        if isinstance(payload, dict):
+            detail = (
+                payload.get("message")
+                or payload.get("error_description")
+                or payload.get("details")
+                or message
+            )
+        elif response.text:
+            detail = f"{message}: {response.text}"
+        return HTTPException(status_code=response.status_code, detail=detail)
