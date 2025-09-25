@@ -27,6 +27,25 @@ class Settings(BaseSettings):
 
     environment: str = "local"
 
+    # AI Service Provider API Keys
+    gemini_api_key: str = ""
+    openai_api_key: str = ""
+    groq_api_key: str = ""
+    openrouter_api_key: str = ""
+
+    # Web Scraping Service API Keys
+    firecrawl_api_key: str = ""
+    hyperbrowser_api_key: str = ""
+
+    # Image Generation Service API Keys
+    imagerouter_api_key: str = ""
+
+    # Development Environment Configuration
+    app_environment: str = "development"
+    api_timeout_seconds: int = 30
+    max_retries: int = 3
+    debug_mode: bool = False
+
     @field_validator("supabase_anon_key", "supabase_service_role_key")
     @classmethod
     def _ensure_not_placeholder(cls, value: str) -> str:
@@ -39,15 +58,15 @@ class Settings(BaseSettings):
 
     @property
     def supabase_rest_url(self) -> str:
-        return f"{self.supabase_url.rstrip('/')}/rest/v1"
+        return f"{str(self.supabase_url).rstrip('/')}/rest/v1"
 
     @property
     def supabase_auth_url(self) -> str:
-        return f"{self.supabase_url.rstrip('/')}/auth/v1"
+        return f"{str(self.supabase_url).rstrip('/')}/auth/v1"
 
     @property
     def supabase_storage_url(self) -> str:
-        return f"{self.supabase_url.rstrip('/')}/storage/v1"
+        return f"{str(self.supabase_url).rstrip('/')}/storage/v1"
 
 
 @lru_cache

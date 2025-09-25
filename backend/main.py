@@ -4,13 +4,13 @@ from typing import Dict
 
 from fastapi import FastAPI
 
-from .app.api.v1.api import api_router
-from .app.core.config import get_settings
-from .app.core.database import get_supabase_client
-from .app.core.logging import configure_logging, get_logger
-from .app.core.middleware import register_middlewares
-from .app.schemas.jobs import JobCreate
-from .app.services.jobs import JobManager
+from app.api.v1.api import api_router
+from app.core.config import get_settings
+from app.core.database import get_supabase_client
+from app.core.logging import configure_logging, get_logger
+from app.core.middleware import register_middlewares
+from app.schemas.jobs import JobCreate
+from app.services.jobs import JobManager
 
 settings = get_settings()
 configure_logging()
