@@ -3,7 +3,15 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, EmailStr, Field, HttpUrl, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    HttpUrl,
+    field_validator,
+    model_validator,
+)
 
 
 class AuthMethod(str, Enum):
@@ -135,6 +143,8 @@ class ProfileUpdateRequest(BaseModel):
 class OnboardingAnswer(BaseModel):
     """Represents a single onboarding question and answer."""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     question_id: str = Field(alias="questionId")
     question: str
     answer: Any
@@ -142,6 +152,8 @@ class OnboardingAnswer(BaseModel):
 
 class OnboardingSubmission(BaseModel):
     """Onboarding payload collected after first sign in."""
+
+    model_config = ConfigDict(populate_by_name=True)
 
     responses: List[OnboardingAnswer]
     completed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
