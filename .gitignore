@@ -57,3 +57,4 @@ app.*.map.json
 *gemini.md
 *firecrawl.md
 
+backend/.env
