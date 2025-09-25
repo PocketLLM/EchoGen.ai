@@ -1,13 +1,16 @@
 """Service for interacting with Supabase Auth."""
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
 from typing import Any, Dict, Optional
 
+import httpx
 from fastapi import HTTPException, status
 
 from ..core.config import Settings
 from ..core.database import SupabaseAsyncClient
+from ..core.logging import get_logger
 from ..schemas.auth import (
     AccountDeletionStatus,
     AuthMethod,
@@ -20,6 +23,9 @@ from ..schemas.auth import (
     UserProfile,
     VerifyTokenResponse,
 )
+
+
+logger = get_logger(__name__)
 
 
 class AuthService:
@@ -131,17 +137,40 @@ class AuthService:
         completed_at = submission.completed_at
         if completed_at.tzinfo is None:
             completed_at = completed_at.replace(tzinfo=UTC)
-        payload = {
-            "user_id": user_id,
-            "responses": [response.model_dump(by_alias=True) for response in submission.responses],
-            "completed_at": completed_at.astimezone(UTC).isoformat(),
+        completed_at_utc = completed_at.astimezone(UTC)
+
+        responses_payload = [
+            response.model_dump(by_alias=True) for response in submission.responses
+        ]
+
+        profile_row = await self._ensure_profile_row(user_id, None)
+        preferences = self._parse_preferences(profile_row.get("preferences"))
+        preferences["onboarding"] = {
+            "responses": responses_payload,
+            "completedAt": completed_at_utc.isoformat(),
         }
-        await self._client.insert("onboarding_responses", payload)
+
+        onboarding_payload = {
+            "user_id": user_id,
+            "responses": responses_payload,
+            "completed_at": completed_at_utc.isoformat(),
+        }
+
+        try:
+            await self._client.insert("onboarding_responses", onboarding_payload)
+        except httpx.HTTPError as exc:
+            logger.error(
+                "Failed to persist onboarding responses",
+                user_id=user_id,
+                error=str(exc),
+            )
+
         await self._client.update(
             "profiles",
             {
                 "onboarding_completed": True,
                 "updated_at": datetime.now(UTC).isoformat(),
+                "preferences": preferences,
             },
             filters={"id": f"eq.{user_id}"},
         )
@@ -304,3 +333,14 @@ class AuthService:
         if not value:
             return None
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+    @staticmethod
+    def _parse_preferences(value: Any) -> Dict[str, Any]:
+        if isinstance(value, dict):
+            return dict(value)
+        if isinstance(value, str) and value:
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                logger.warning("Failed to decode profile preferences JSON", raw=value)
+        return {}
