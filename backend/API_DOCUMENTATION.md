@@ -1,5 +1,9 @@
 # EchoGen.ai Backend API (v1)
 
+hosted url= https://echo-gen-ai.vercel.app/
+hosted health = https://echo-gen-ai.vercel.app/health
+hosted docs=https://echo-gen-ai.vercel.app/docs
+
 The backend exposes a modular FastAPI application organised under the `/api/v1` prefix.
 All endpoints require HTTPS and JSON payloads. Authentication relies on Supabase Auth
 JWTs obtained during sign-in.
