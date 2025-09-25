@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/api_exception.dart';
 import '../models/auth_models.dart';
 import '../services/auth_api_service.dart';
+import '../utils/debug_logger.dart';
 import '../utils/token_storage.dart';
 
 enum AuthStatus { unknown, unauthenticated, authenticated, onboardingRequired }
@@ -37,8 +39,10 @@ class AuthProvider extends ChangeNotifier {
   Future<void> bootstrap() async {
     _status = AuthStatus.unknown;
     notifyListeners();
+    DebugLogger.log('Bootstrapping session from secure storage', category: 'AuthProvider');
     final storedTokens = await _tokenStorage.readTokens();
     if (storedTokens == null) {
+      DebugLogger.log('No stored tokens found; user unauthenticated', category: 'AuthProvider');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return;
@@ -52,8 +56,17 @@ class AuthProvider extends ChangeNotifier {
       _status = profile.onboardingCompleted
           ? AuthStatus.authenticated
           : AuthStatus.onboardingRequired;
-    } catch (error) {
-      debugPrint('Auth bootstrap failed: $error');
+      DebugLogger.log(
+        'Bootstrap succeeded for user ${profile.id}. Onboarding completed: ${profile.onboardingCompleted}',
+        category: 'AuthProvider',
+      );
+    } catch (error, stackTrace) {
+      DebugLogger.log(
+        'Auth bootstrap failed',
+        category: 'AuthProvider',
+        error: error,
+        stackTrace: stackTrace,
+      );
       await _tokenStorage.clear();
       _session = null;
       _user = null;
@@ -70,6 +83,7 @@ class AuthProvider extends ChangeNotifier {
     await _executeAuthFlow(
       action: () => _apiService.signIn(identifier: email, password: password),
       remember: remember,
+      operation: 'signIn',
     );
   }
 
@@ -86,6 +100,7 @@ class AuthProvider extends ChangeNotifier {
         fullName: fullName,
       ),
       remember: remember,
+      operation: 'signUp',
     );
   }
 
@@ -100,8 +115,13 @@ class AuthProvider extends ChangeNotifier {
     if (remote && token != null) {
       try {
         await _apiService.signOut(token);
-      } catch (error) {
-        debugPrint('Sign out error: $error');
+      } catch (error, stackTrace) {
+        DebugLogger.log(
+          'Remote sign out failed',
+          category: 'AuthProvider',
+          error: error,
+          stackTrace: stackTrace,
+        );
       }
     }
     await _tokenStorage.clear();
@@ -111,6 +131,7 @@ class AuthProvider extends ChangeNotifier {
     final token = _requireToken();
     final userId = _user?.id;
     if (userId == null) return;
+    DebugLogger.log('Refreshing profile for $userId', category: 'AuthProvider');
     final profile = await _apiService.refreshUser(userId, token);
     _user = profile;
     _status = profile.onboardingCompleted
@@ -140,12 +161,20 @@ class AuthProvider extends ChangeNotifier {
 
   Future<UserProfileModel> submitOnboarding(OnboardingAnswers answers) async {
     final token = _requireToken();
+    DebugLogger.log(
+      'Submitting onboarding with ${answers.length} responses',
+      category: 'AuthProvider',
+    );
     final updated = await _apiService.submitOnboarding(
       token: token,
       responses: answers,
     );
     _user = updated;
     _status = AuthStatus.authenticated;
+    DebugLogger.log(
+      'Onboarding submission completed for user ${updated.id}',
+      category: 'AuthProvider',
+    );
     notifyListeners();
     return updated;
   }
@@ -174,10 +203,12 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _executeAuthFlow({
     required Future<AuthResponseModel> Function() action,
     required bool remember,
+    required String operation,
   }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
+    DebugLogger.log('Starting $operation flow', category: 'AuthProvider');
 
     try {
       final response = await action();
@@ -192,8 +223,17 @@ class AuthProvider extends ChangeNotifier {
       _status = response.user.onboardingCompleted
           ? AuthStatus.authenticated
           : AuthStatus.onboardingRequired;
+      DebugLogger.log(
+        '$operation succeeded for user ${response.user.id}. Onboarding completed: ${response.user.onboardingCompleted}',
+        category: 'AuthProvider',
+      );
     } on ApiException catch (error) {
       _error = error.message;
+      DebugLogger.log(
+        '$operation failed with API error: ${error.message}',
+        category: 'AuthProvider',
+        error: error,
+      );
       rethrow;
     } finally {
       _isLoading = false;

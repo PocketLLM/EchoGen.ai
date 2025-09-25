@@ -111,6 +111,8 @@ class SupabaseAsyncClient:
 
         response = await self._rest_client.post(f"/{table}", json=payload, headers=headers)
         response.raise_for_status()
+        if not response.content:
+            return []
         return response.json()
 
     async def update(
@@ -125,8 +127,12 @@ class SupabaseAsyncClient:
         if options and options.prefer:
             headers["Prefer"] = options.prefer
 
-        response = await self._rest_client.patch(f"/{table}", params=filters or {}, json=payload, headers=headers)
+        response = await self._rest_client.patch(
+            f"/{table}", params=filters or {}, json=payload, headers=headers
+        )
         response.raise_for_status()
+        if not response.content:
+            return []
         return response.json()
 
     async def delete(
@@ -137,6 +143,8 @@ class SupabaseAsyncClient:
     ) -> List[Dict[str, Any]]:
         response = await self._rest_client.delete(f"/{table}", params=filters or {})
         response.raise_for_status()
+        if not response.content:
+            return []
         return response.json()
 
     async def rpc(self, function: str, *, payload: Optional[Dict[str, Any]] = None) -> Any:
