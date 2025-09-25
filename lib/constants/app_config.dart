@@ -3,7 +3,7 @@ class AppConfig {
 
   static const String apiBaseUrl = String.fromEnvironment(
     'ECHO_GEN_API_BASE',
-    defaultValue: 'http://localhost:8000/api/v1',
+    defaultValue: 'https://echo-gen-ai.vercel.app/api/v1',
   );
 
   static const Duration networkTimeout = Duration(seconds: 20);

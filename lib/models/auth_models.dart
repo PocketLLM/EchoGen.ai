@@ -1,14 +1,6 @@
 import 'dart:convert';
 
-class ApiException implements Exception {
-  ApiException(this.message, {this.statusCode});
-
-  final String message;
-  final int? statusCode;
-
-  @override
-  String toString() => 'ApiException(statusCode: $statusCode, message: $message)';
-}
+export 'api_exception.dart';
 
 class AuthSessionTokens {
   const AuthSessionTokens({
