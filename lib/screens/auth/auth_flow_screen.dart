@@ -6,7 +6,6 @@ import '../../models/auth_models.dart';
 import '../../providers/auth_provider.dart';
 import '../home_screen.dart';
 import '../user_onboarding_screen.dart';
-import 'verification_screen.dart';
 
 enum _CredentialType { email, phone }
 
@@ -89,9 +88,6 @@ class _AuthFlowScreenState extends State<AuthFlowScreen>
         remember: _rememberMe,
       );
       if (!mounted) return;
-      await Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => VerificationScreen(email: email),
-      ));
       await _navigatePostAuth(context, authProvider);
     } on ApiException catch (error) {
       _showError(context, error.message);
