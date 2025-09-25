@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
+import httpx
 import pytest
 from fastapi import HTTPException, status
 
@@ -252,6 +253,9 @@ async def test_submit_onboarding_persists_answers(
         }
     )
     service._build_user_profile = AsyncMock(return_value=expected_user)  # type: ignore[attr-defined]
+    service._ensure_profile_row = AsyncMock(  # type: ignore[attr-defined]
+        return_value={"preferences": {"existing": {"value": 1}}}
+    )
 
     submission = OnboardingSubmission(
         responses=[
@@ -278,5 +282,61 @@ async def test_submit_onboarding_persists_answers(
     assert update_call.args[0] == "profiles"
     assert update_call.kwargs["filters"] == {"id": "eq.user-1"}
     assert update_call.args[1]["onboarding_completed"] is True
+    preferences_payload = update_call.args[1]["preferences"]
+    assert preferences_payload["existing"] == {"value": 1}
+    assert preferences_payload["onboarding"]["responses"][0]["questionId"] == "format"
 
+    assert result == expected_user
+
+
+@pytest.mark.anyio
+async def test_submit_onboarding_recovers_when_table_missing(
+    fake_client: FakeSupabaseClient, settings: Settings
+) -> None:
+    service = AuthService(fake_client, settings)
+
+    expected_user = UserProfile(
+        id="user-1",
+        email="user@example.com",
+        full_name="Echo Creator",
+        created_at=datetime(2024, 1, 1, tzinfo=UTC),
+        onboarding_completed=True,
+    )
+
+    request = httpx.Request(
+        "POST", "https://example.supabase.co/rest/v1/onboarding_responses"
+    )
+    response = httpx.Response(
+        status.HTTP_404_NOT_FOUND,
+        request=request,
+        json={"message": "relation 'onboarding_responses' does not exist"},
+    )
+    fake_client.insert = AsyncMock(side_effect=httpx.HTTPStatusError("Not Found", request=request, response=response))
+    fake_client.update = AsyncMock(return_value=[])
+    service._fetch_auth_user = AsyncMock(  # type: ignore[attr-defined]
+        return_value={
+            "id": "user-1",
+            "email": "user@example.com",
+            "created_at": datetime(2024, 1, 1, tzinfo=UTC).isoformat(),
+        }
+    )
+    service._build_user_profile = AsyncMock(return_value=expected_user)  # type: ignore[attr-defined]
+    service._ensure_profile_row = AsyncMock(  # type: ignore[attr-defined]
+        return_value={"preferences": {}}
+    )
+
+    submission = OnboardingSubmission(
+        responses=[
+            OnboardingAnswer(
+                question_id="format", question="Preferred format", answer="Interview"
+            )
+        ]
+    )
+
+    result = await service.submit_onboarding("user-1", submission)
+
+    fake_client.update.assert_awaited_once()
+    update_payload = fake_client.update.await_args.args[1]
+    assert update_payload["onboarding_completed"] is True
+    assert update_payload["preferences"]["onboarding"]["responses"][0]["answer"] == "Interview"
     assert result == expected_user
