@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import HTTPException, status
+import httpx
 
 from backend.app.core.config import Settings
 from backend.app.schemas.auth import (
@@ -242,6 +243,7 @@ async def test_submit_onboarding_persists_answers(
         onboarding_completed=True,
     )
 
+    fake_client.select = AsyncMock(return_value=[{"preferences": {"existing": "value"}}])
     fake_client.insert = AsyncMock(return_value=[])
     fake_client.update = AsyncMock(return_value=[])
     service._fetch_auth_user = AsyncMock(  # type: ignore[attr-defined]
@@ -276,7 +278,62 @@ async def test_submit_onboarding_persists_answers(
 
     update_call = fake_client.update.await_args
     assert update_call.args[0] == "profiles"
+    update_payload = update_call.args[1]
+    assert update_payload["onboarding_completed"] is True
+    assert update_payload["preferences"]["existing"] == "value"
+    onboarding_preferences = update_payload["preferences"]["onboarding"]
+    assert onboarding_preferences["responses"][0]["questionId"] == "format"
+    assert onboarding_preferences["responses"][1]["answer"] == {"option": "Weekly"}
+    assert "completedAt" in onboarding_preferences
     assert update_call.kwargs["filters"] == {"id": "eq.user-1"}
-    assert update_call.args[1]["onboarding_completed"] is True
 
+    assert result == expected_user
+
+
+@pytest.mark.anyio
+async def test_submit_onboarding_logs_insert_failure(
+    fake_client: FakeSupabaseClient, settings: Settings
+) -> None:
+    service = AuthService(fake_client, settings)
+
+    expected_user = UserProfile(
+        id="user-1",
+        email="user@example.com",
+        full_name="Echo Creator",
+        created_at=datetime(2024, 1, 1, tzinfo=UTC),
+        onboarding_completed=True,
+    )
+
+    fake_client.select = AsyncMock(return_value=[{"preferences": {}}])
+    request = httpx.Request(
+        "POST",
+        "https://example.supabase.co/rest/v1/onboarding_responses",
+    )
+    response = httpx.Response(500, request=request)
+    fake_client.insert = AsyncMock(
+        side_effect=httpx.HTTPStatusError("boom", request=request, response=response)
+    )
+    fake_client.update = AsyncMock(return_value=[])
+    service._fetch_auth_user = AsyncMock(  # type: ignore[attr-defined]
+        return_value={
+            "id": "user-1",
+            "email": "user@example.com",
+            "created_at": datetime(2024, 1, 1, tzinfo=UTC).isoformat(),
+        }
+    )
+    service._build_user_profile = AsyncMock(return_value=expected_user)  # type: ignore[attr-defined]
+
+    submission = OnboardingSubmission(
+        responses=[
+            OnboardingAnswer(question_id="format", question="Preferred format", answer="Interview"),
+        ],
+        completed_at=datetime(2024, 1, 2, tzinfo=UTC),
+    )
+
+    result = await service.submit_onboarding("user-1", submission)
+
+    fake_client.insert.assert_awaited_once()
+    update_payload = fake_client.update.await_args.args[1]
+    assert "onboarding" in update_payload["preferences"]
+    assert update_payload["preferences"]["onboarding"]["responses"][0]["questionId"] == "format"
     assert result == expected_user

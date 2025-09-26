@@ -1,8 +1,17 @@
 """Application configuration using environment variables."""
-from functools import lru_cache
+from __future__ import annotations
 
+from functools import lru_cache
+from pathlib import Path
+
+from dotenv import load_dotenv
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+_BACKEND_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(_BACKEND_DIR / ".env")
+load_dotenv(_BACKEND_DIR.parent / ".env")
 
 
 class Settings(BaseSettings):
@@ -26,6 +35,7 @@ class Settings(BaseSettings):
     api_rate_limit_per_minute: int = 120
 
     environment: str = "local"
+    backend_base_url: AnyHttpUrl | None = None
 
     # AI Service Provider API Keys
     gemini_api_key: str = ""

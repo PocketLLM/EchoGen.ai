@@ -1,13 +1,14 @@
 """Tests for the lightweight Supabase client wrapper."""
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock
 
 import httpx
 import pytest
 
 from backend.app.core.config import Settings
-from backend.app.core.database import SupabaseAsyncClient
+from backend.app.core.database import SupabaseAsyncClient, get_supabase_client
 
 
 @pytest.fixture()
@@ -66,3 +67,56 @@ async def test_delete_handles_no_content(settings: Settings) -> None:
         assert result == []
     finally:
         await client.close()
+
+
+@pytest.mark.anyio
+async def test_get_supabase_client_reuses_active_loop(settings: Settings) -> None:
+    from backend.app.core import database
+
+    database._client = None
+    database._client_loop = None
+
+    client_one = get_supabase_client(settings)
+    client_two = get_supabase_client(settings)
+
+    assert client_one is client_two
+
+    await client_one.close()
+    database._client = None
+    database._client_loop = None
+
+
+def test_get_supabase_client_recreates_for_new_loop(settings: Settings) -> None:
+    from backend.app.core import database
+
+    database._client = None
+    database._client_loop = None
+
+    async def obtain_client() -> SupabaseAsyncClient:
+        return get_supabase_client(settings)
+
+    loop_one = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop_one)
+        client_one = loop_one.run_until_complete(obtain_client())
+        original_close = client_one.close
+        close_mock = AsyncMock(side_effect=original_close)
+        client_one.close = close_mock  # type: ignore[method-assign]
+    finally:
+        asyncio.set_event_loop(None)
+        loop_one.close()
+
+    loop_two = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop_two)
+        client_two = loop_two.run_until_complete(obtain_client())
+        assert client_two is not client_one
+        loop_two.run_until_complete(asyncio.sleep(0))
+        close_mock.assert_awaited_once()
+        loop_two.run_until_complete(client_two.close())
+    finally:
+        asyncio.set_event_loop(None)
+        loop_two.close()
+
+    database._client = None
+    database._client_loop = None

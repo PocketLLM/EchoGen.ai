@@ -1,6 +1,9 @@
 """Supabase client utilities used by the service layer."""
 from __future__ import annotations
 
+import asyncio
+from asyncio import AbstractEventLoop
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -154,10 +157,55 @@ class SupabaseAsyncClient:
 
 
 _client: Optional[SupabaseAsyncClient] = None
+_client_loop: Optional[AbstractEventLoop] = None
+
+
+def _get_event_loop() -> Optional[AbstractEventLoop]:
+    """Return the currently active event loop if available."""
+
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        try:
+            return asyncio.get_event_loop()
+        except RuntimeError:
+            return None
 
 
 def get_supabase_client(settings: Optional[Settings] = None) -> SupabaseAsyncClient:
     global _client
+    global _client_loop
+
+    loop = _get_event_loop()
     if _client is None:
         _client = SupabaseAsyncClient(settings or get_settings())
+        _client_loop = loop
+        return _client
+
+    # Recreate the client if the previous event loop is no longer usable.
+    recreate_client = False
+    if _client_loop is None and loop is not None:
+        recreate_client = True
+    elif _client_loop is not None:
+        if _client_loop.is_closed():
+            recreate_client = True
+        elif loop is not None and loop is not _client_loop:
+            recreate_client = True
+
+    if recreate_client:
+        old_client = _client
+        _client = SupabaseAsyncClient(settings or get_settings())
+        _client_loop = loop
+
+        if old_client is not None:
+            async def _close_old_client() -> None:
+                with suppress(Exception):
+                    await old_client.close()
+
+            if loop is not None and loop.is_running():
+                loop.create_task(_close_old_client())
+            else:
+                # No active loop – close immediately using a temporary loop.
+                asyncio.run(_close_old_client())
+
     return _client
