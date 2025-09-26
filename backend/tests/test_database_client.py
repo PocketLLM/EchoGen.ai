@@ -99,7 +99,9 @@ def test_get_supabase_client_recreates_for_new_loop(settings: Settings) -> None:
     try:
         asyncio.set_event_loop(loop_one)
         client_one = loop_one.run_until_complete(obtain_client())
-        loop_one.run_until_complete(client_one.close())
+        original_close = client_one.close
+        close_mock = AsyncMock(side_effect=original_close)
+        client_one.close = close_mock  # type: ignore[method-assign]
     finally:
         asyncio.set_event_loop(None)
         loop_one.close()
@@ -109,6 +111,8 @@ def test_get_supabase_client_recreates_for_new_loop(settings: Settings) -> None:
         asyncio.set_event_loop(loop_two)
         client_two = loop_two.run_until_complete(obtain_client())
         assert client_two is not client_one
+        loop_two.run_until_complete(asyncio.sleep(0))
+        close_mock.assert_awaited_once()
         loop_two.run_until_complete(client_two.close())
     finally:
         asyncio.set_event_loop(None)

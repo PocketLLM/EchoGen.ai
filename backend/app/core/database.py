@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import AbstractEventLoop
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -192,7 +193,19 @@ def get_supabase_client(settings: Optional[Settings] = None) -> SupabaseAsyncCli
             recreate_client = True
 
     if recreate_client:
+        old_client = _client
         _client = SupabaseAsyncClient(settings or get_settings())
         _client_loop = loop
+
+        if old_client is not None:
+            async def _close_old_client() -> None:
+                with suppress(Exception):
+                    await old_client.close()
+
+            if loop is not None and loop.is_running():
+                loop.create_task(_close_old_client())
+            else:
+                # No active loop – close immediately using a temporary loop.
+                asyncio.run(_close_old_client())
 
     return _client
