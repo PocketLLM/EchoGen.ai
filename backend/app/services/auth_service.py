@@ -55,8 +55,11 @@ class AuthService:
         if metadata:
             request_body["data"] = metadata
 
-        response = await self._client.auth.post("/signup", json=request_body)
-        response.raise_for_status()
+        try:
+            response = await self._client.auth.post("/signup", json=request_body)
+            response.raise_for_status()
+        except httpx.HTTPError as exc:  # pragma: no cover - handled downstream
+            self._handle_auth_http_error(exc, "Unable to complete sign up")
         data = response.json()
 
         user = data.get("user", data)
@@ -74,10 +77,19 @@ class AuthService:
                 detail="Selected sign-in method will be available soon",
             )
 
-        response = await self._client.auth.post("/token?grant_type=password", json=credentials)
+        try:
+            response = await self._client.auth.post("/token?grant_type=password", json=credentials)
+        except httpx.HTTPError as exc:  # pragma: no cover - handled downstream
+            self._handle_auth_http_error(exc, "Unable to complete sign in")
+
         if response.status_code == status.HTTP_400_BAD_REQUEST:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-        response.raise_for_status()
+            detail = self._extract_error_detail(response, "Invalid credentials")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
+
+        try:
+            response.raise_for_status()
+        except httpx.HTTPError as exc:  # pragma: no cover - handled downstream
+            self._handle_auth_http_error(exc, "Unable to complete sign in")
         data = response.json()
 
         auth_response = await self._build_auth_response(data)
@@ -355,3 +367,43 @@ class AuthService:
             except json.JSONDecodeError:
                 logger.warning("Failed to decode profile preferences JSON", raw=value)
         return {}
+
+    def _handle_auth_http_error(self, exc: httpx.HTTPError, fallback_detail: str) -> None:
+        """Translate httpx errors into FastAPI HTTPException instances."""
+
+        if isinstance(exc, httpx.HTTPStatusError):
+            response = exc.response
+            detail = self._extract_error_detail(response, fallback_detail)
+            raise HTTPException(status_code=response.status_code, detail=detail) from exc
+
+        logger.error("Auth service request failed", error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=fallback_detail,
+        ) from exc
+
+    @staticmethod
+    def _extract_error_detail(response: httpx.Response, fallback: str) -> str:
+        try:
+            payload = response.json()
+        except ValueError:  # pragma: no cover - non-JSON payloads are rare
+            payload = None
+
+        detail: Optional[str] = None
+        if isinstance(payload, dict):
+            detail_candidate = (
+                payload.get("msg")
+                or payload.get("message")
+                or payload.get("error_description")
+                or payload.get("error")
+            )
+            if isinstance(detail_candidate, dict):
+                detail = detail_candidate.get("message")
+            elif isinstance(detail_candidate, str):
+                detail = detail_candidate
+
+        if detail:
+            return detail
+
+        text = response.text.strip()
+        return text or fallback

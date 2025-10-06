@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, MagicMock
 import httpx
 import pytest
 from fastapi import HTTPException, status
-import httpx
 
 from backend.app.core.config import Settings
 from backend.app.schemas.auth import (
@@ -20,17 +19,9 @@ from backend.app.services import auth_service
 from backend.app.services.auth_service import AuthService
 
 
-class MockResponse:
-    def __init__(self, payload, status_code: int = 200) -> None:
-        self._payload = payload
-        self.status_code = status_code
-
-    def json(self):
-        return self._payload
-
-    def raise_for_status(self) -> None:
-        if self.status_code >= 400:
-            raise RuntimeError(f"HTTP {self.status_code}")
+def make_response(payload, status_code: int = 200, method: str = "POST") -> httpx.Response:
+    request = httpx.Request(method, "https://example.supabase.co/auth")
+    return httpx.Response(status_code, json=payload, request=request)
 
 
 class FakeSupabaseClient:
@@ -100,7 +91,7 @@ async def test_sign_up_with_phone_uses_phone_payload(
     service._build_auth_response = AsyncMock(return_value=auth_response)  # type: ignore[attr-defined]
 
     response_payload = {"user": {"id": "user-1"}, "session": {"access_token": "jwt"}}
-    fake_client.auth.post = AsyncMock(return_value=MockResponse(response_payload))
+    fake_client.auth.post = AsyncMock(return_value=make_response(response_payload))
 
     payload = SignUpRequest(method=AuthMethod.PHONE, phoneNumber="+13334445555", password="Passw0rd!")
 
@@ -114,6 +105,28 @@ async def test_sign_up_with_phone_uses_phone_payload(
 
 
 @pytest.mark.anyio
+async def test_sign_up_surfaces_supabase_error(
+    fake_client: FakeSupabaseClient, settings: Settings
+) -> None:
+    service = AuthService(fake_client, settings)
+    service._ensure_profile_row = AsyncMock(return_value={})  # type: ignore[attr-defined]
+
+    error_response = {"msg": "User already registered"}
+    fake_client.auth.post = AsyncMock(
+        return_value=make_response(error_response, status_code=status.HTTP_400_BAD_REQUEST)
+    )
+
+    payload = SignUpRequest(method=AuthMethod.EMAIL, email="user@example.com", password="Passw0rd!")
+
+    with pytest.raises(HTTPException) as exc:
+        await service.sign_up(payload)
+
+    assert exc.value.status_code == status.HTTP_400_BAD_REQUEST
+    assert exc.value.detail == "User already registered"
+    service._ensure_profile_row.assert_not_awaited()
+
+
+@pytest.mark.anyio
 async def test_sign_in_with_phone_uses_password_grant(
     fake_client: FakeSupabaseClient, settings: Settings
 ) -> None:
@@ -124,7 +137,7 @@ async def test_sign_in_with_phone_uses_password_grant(
     service.cancel_pending_deletion = AsyncMock(return_value=None)  # type: ignore[attr-defined]
 
     response_payload = {"user": {"id": "user-1"}, "session": {"access_token": "jwt"}}
-    fake_client.auth.post = AsyncMock(return_value=MockResponse(response_payload))
+    fake_client.auth.post = AsyncMock(return_value=make_response(response_payload))
 
     payload = SignInRequest(
         method=AuthMethod.PHONE,
@@ -140,6 +153,44 @@ async def test_sign_in_with_phone_uses_password_grant(
     assert request_json["password"] == "Passw0rd!"
     service.cancel_pending_deletion.assert_awaited_once_with("user-1")
     assert result is auth_response
+
+
+@pytest.mark.anyio
+async def test_sign_in_propagates_supabase_error(
+    fake_client: FakeSupabaseClient, settings: Settings
+) -> None:
+    service = AuthService(fake_client, settings)
+
+    fake_client.auth.post = AsyncMock(
+        return_value=make_response({"msg": "Temporarily disabled"}, status_code=status.HTTP_429_TOO_MANY_REQUESTS)
+    )
+
+    payload = SignInRequest(method=AuthMethod.EMAIL, email="user@example.com", password="Passw0rd!")
+
+    with pytest.raises(HTTPException) as exc:
+        await service.sign_in(payload)
+
+    assert exc.value.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    assert exc.value.detail == "Temporarily disabled"
+
+
+@pytest.mark.anyio
+async def test_sign_in_uses_supabase_error_message_for_invalid_credentials(
+    fake_client: FakeSupabaseClient, settings: Settings
+) -> None:
+    service = AuthService(fake_client, settings)
+
+    fake_client.auth.post = AsyncMock(
+        return_value=make_response({"msg": "Invalid login credentials"}, status_code=status.HTTP_400_BAD_REQUEST)
+    )
+
+    payload = SignInRequest(method=AuthMethod.EMAIL, email="user@example.com", password="wrong")
+
+    with pytest.raises(HTTPException) as exc:
+        await service.sign_in(payload)
+
+    assert exc.value.status_code == status.HTTP_401_UNAUTHORIZED
+    assert exc.value.detail == "Invalid login credentials"
 
 
 @pytest.mark.anyio
@@ -256,7 +307,7 @@ async def test_submit_onboarding_persists_answers(
     )
     service._build_user_profile = AsyncMock(return_value=expected_user)  # type: ignore[attr-defined]
     service._ensure_profile_row = AsyncMock(  # type: ignore[attr-defined]
-        return_value={"preferences": {"existing": {"value": 1}}}
+        return_value={"preferences": {"existing": "value"}}
     )
 
     submission = OnboardingSubmission(
