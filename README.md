@@ -21,30 +21,26 @@
 
 EchoGen.ai is a powerful, open-source Flutter application that transforms any web content or text into engaging, multi-speaker AI-generated podcasts. Whether you're a content creator, educator, or just someone who loves podcasts, EchoGen.ai makes it easy to convert articles, blog posts, or custom scripts into professional-quality audio content.
 
-### 🌟 Why EchoGen.ai v0.3.0?
+### 🌟 Why EchoGen.ai v0.2.1?
 
-- **🧭 Unified Creation Dashboard**: Redesigned home screen with quick actions for scraping, scripting, and recording
-- **🎛️ Guided Episode Builder**: Step-by-step workflow that surfaces context-aware tips and recommended models
-- **🎚️ Adaptive Themes**: Dynamic theming that responds to artwork colors and user preferences in real time
-- **🗂️ Project Workspaces**: Group related scripts, cover art, and audio into organized collections
-- **📈 Production Analytics**: Track listening progress, generation time, and quality metrics for each episode
-- **🛡️ Release Health Checks**: Pre-flight validation to ensure API keys, storage, and voices are ready before rendering
-- **🤝 Collaboration Ready**: Share workspace snapshots and invite collaborators with read-only links
-- **🎨 UI Refresh**: Refined typography, elevated cards, and consistent paddings across the entire experience
-- **📱 Cross-Platform**: Works on Android, iOS, and desktop
-- **🆓 Open Source**: Completely free and open for contributions
+- **📱 Android-first studio**: The entire creation journey is tuned for mobile with tactile controls and fast navigation.
+- **🛣️ Guided creation timeline**: Move from research to publishing with contextual prompts and confidence checks.
+- **🎙️ Voice twin engine**: Blend expressive, multi-speaker narration while keeping emotional cues out of your script copy.
+- **🎨 Cinematic cover art**: Generate on-brand visuals with curated palettes and instant refinements.
+- **⚡ Speed & stability**: Smarter caching, quicker renders, and resilient error recovery keep production flowing.
+- **🛡️ Release safeguards**: Inline health checks verify API keys, storage, and quota limits before you press publish.
+- **🆓 Open Source**: Completely free and open for contributions.
 
 ## ✨ Features
 
-### 🆕 New in v0.3.0
+### 🆕 New in v0.2.1
 
-- **🧭 Unified Creation Dashboard**: Reimagined home experience with "Create", "Import", and "Resume" quick actions
-- **🛣️ Guided Episode Timeline**: Visual tracker that keeps tabs on scraping, scripting, voice selection, and publishing states
-- **🎚️ Adaptive Themes**: Automatic accent color selection from cover art with instant light/dark previews
-- **📈 Episode Insights**: Generation history now includes processing durations, token counts, and playback stats
-- **🛡️ Release Health Checks**: Inline warnings for missing keys, quota limits, or storage constraints before generating audio
-- **🤝 Collaboration Links**: Share read-only workspace snapshots for feedback or review sessions
-- **⚡ Performance Boosts**: Faster navigation, smoother list scrolling, and optimized caching across providers
+- **✨ Android home revamp**: Focus views keep research, scripting, and publishing milestones crystal clear on small screens.
+- **🧠 Tone guardrails**: Script intelligence separates emotion cues from spoken dialogue to keep narration natural.
+- **🎚️ Voice twin tuning**: Improved blending removes abrupt cuts and trims silence automatically.
+- **🎨 Cover art palettes**: Curated model presets speed up ideation while staying on-brand.
+- **☁️ Offline-first caching**: Larger episode assets sync in the background so you can keep creating on the go.
+- **🛡️ Preflight checklist**: Health checks surface missing API keys, low storage, and quota warnings before rendering.
 
 ### ✨ Previously in v0.2.0
 
@@ -426,7 +422,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🚀 Roadmap
 
 ### ✅ Latest Release
-- **v0.3.0**: Unified creation dashboard, guided episode timeline, adaptive themes, analytics, collaboration links, performance boosts
+- **v0.2.1**: Android-first studio polish, tone guardrails, voice twin tuning, cover art palettes, and offline-first caching boosts
 
 ### 🛠️ In Progress
 - **Live Collaboration**: Multiplayer editing with inline comments and suggestions
@@ -439,7 +435,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Immersive Video Mode**: Optional video layers, AI avatars, and audiogram templates
 
 ### Version History
-- **v0.3.0**: Creation dashboard redesign, workspace organization, adaptive themes, episode insights, release health checks, collaboration links
+- **v0.2.1**: Android studio revamp, tone guardrails, voice twin tuning, cover art palettes, offline-first caching
 - **v0.2.0**: Background audio playback, AI cover art generation, smart script chunking, centralized API management, enhanced UI/UX
 - **v0.1.0**: Initial release with core features
 

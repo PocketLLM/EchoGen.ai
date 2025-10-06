@@ -3,36 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EchoGen.ai — The Minimal SaaS Platform for AI-Generated Podcasts</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>EchoGen.ai — AI podcast studio for Android</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --background: #f6f7fb;
-            --surface: #ffffff;
-            --surface-muted: rgba(255, 255, 255, 0.6);
-            --ink: #0f172a;
-            --ink-soft: #4b5563;
-            --accent: #5465ff;
-            --accent-soft: rgba(84, 101, 255, 0.08);
-            --accent-strong: #303ad9;
-            --border: rgba(15, 23, 42, 0.08);
-            --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+            --bg-ink: #05030f;
+            --bg-gradient-start: #05030f;
+            --bg-gradient-end: #1a1f5c;
+            --accent: #5865f2;
+            --accent-hot: #f97316;
+            --accent-soft: rgba(88, 101, 242, 0.16);
+            --card: rgba(7, 6, 23, 0.65);
+            --card-strong: rgba(14, 13, 37, 0.8);
+            --text-primary: #f9fbff;
+            --text-secondary: rgba(235, 239, 255, 0.72);
+            --text-muted: rgba(186, 196, 228, 0.58);
+            --border: rgba(255, 255, 255, 0.12);
+            --shadow: 0 40px 120px rgba(6, 9, 40, 0.45);
         }
 
         *, *::before, *::after {
             box-sizing: border-box;
         }
 
-        html, body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            color: var(--ink);
-            background: var(--background);
-            -webkit-font-smoothing: antialiased;
-        }
-
         body {
+            margin: 0;
+            font-family: 'Manrope', sans-serif;
+            background: radial-gradient(circle at 20% 20%, rgba(88, 101, 242, 0.22), transparent 45%),
+                        radial-gradient(circle at 80% 10%, rgba(249, 115, 22, 0.24), transparent 55%),
+                        linear-gradient(160deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.55;
             overflow-x: hidden;
         }
 
@@ -41,31 +45,40 @@
             text-decoration: none;
         }
 
-        .page {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
 
-        .container {
-            width: min(1200px, 92vw);
-            margin: 0 auto;
+        .page-shell {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
 
         header {
             position: sticky;
             top: 0;
-            z-index: 100;
-            backdrop-filter: blur(14px);
-            background: rgba(246, 247, 251, 0.75);
-            border-bottom: 1px solid var(--border);
+            z-index: 20;
+            backdrop-filter: blur(18px);
+            background: rgba(6, 4, 18, 0.55);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .nav {
+            margin: 0 auto;
+            width: min(1180px, 92vw);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 20px 0;
+            padding: 18px 0;
         }
 
         .brand {
@@ -73,824 +86,907 @@
             align-items: center;
             gap: 12px;
             font-weight: 600;
-            font-size: 1.1rem;
+            letter-spacing: 0.02em;
         }
 
-        .brand img {
+        .brand-mark {
             width: 40px;
             height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(88, 101, 242, 0.28), rgba(249, 115, 22, 0.35));
+            display: grid;
+            place-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-mark::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 9px;
+            background: linear-gradient(160deg, rgba(88, 101, 242, 0.85), rgba(17, 19, 56, 0.9));
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .brand span {
+            font-size: 1rem;
+            color: var(--text-secondary);
         }
 
         .nav-links {
             display: flex;
-            gap: 24px;
-            font-size: 0.95rem;
+            gap: clamp(14px, 2vw, 28px);
+            color: var(--text-muted);
+            font-size: 0.92rem;
         }
 
         .nav-links a {
-            color: var(--ink-soft);
-            transition: color 0.25s ease;
+            position: relative;
+            padding: 6px 0;
         }
 
-        .nav-links a:hover {
-            color: var(--ink);
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(88,101,242,0.8), rgba(249,115,22,0.8));
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
         }
 
         .nav-cta a {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 12px 20px;
+            gap: 10px;
+            background: linear-gradient(120deg, rgba(88, 101, 242, 0.92), rgba(94, 234, 212, 0.4));
+            padding: 12px 22px;
             border-radius: 999px;
-            background: var(--ink);
-            color: white;
             font-weight: 600;
-            font-size: 0.95rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.15);
+            font-size: 0.92rem;
+            color: white;
+            box-shadow: 0 18px 45px rgba(88, 101, 242, 0.35);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
         }
 
         .nav-cta a:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 24px 50px rgba(15, 23, 42, 0.22);
+            transform: translateY(-3px);
+            box-shadow: 0 26px 60px rgba(88, 101, 242, 0.45);
         }
 
         main {
             flex: 1;
         }
 
+        .section {
+            width: min(1180px, 92vw);
+            margin: 0 auto;
+            padding: clamp(72px, 12vw, 110px) 0;
+        }
+
         .hero {
             position: relative;
-            padding: clamp(120px, 20vh, 180px) 0 140px;
-            display: grid;
-            place-items: center;
-            overflow: hidden;
+            padding-top: clamp(110px, 18vw, 150px);
+            padding-bottom: clamp(90px, 16vw, 140px);
         }
 
         .hero::before,
         .hero::after {
-            content: "";
+            content: '';
             position: absolute;
             border-radius: 50%;
-            filter: blur(90px);
-            opacity: 0.5;
-            animation: float 16s ease-in-out infinite;
+            filter: blur(120px);
+            opacity: 0.6;
+            z-index: -1;
+            animation: float 18s ease-in-out infinite;
         }
 
         .hero::before {
-            width: 480px;
-            height: 480px;
-            background: rgba(84, 101, 255, 0.35);
+            width: 560px;
+            height: 560px;
+            background: rgba(88, 101, 242, 0.32);
             top: -220px;
-            right: -120px;
-            animation-delay: 0s;
+            left: -140px;
         }
 
         .hero::after {
-            width: 360px;
-            height: 360px;
-            background: rgba(17, 24, 39, 0.18);
-            bottom: -180px;
-            left: -100px;
+            width: 420px;
+            height: 420px;
+            background: rgba(249, 115, 22, 0.22);
+            bottom: -140px;
+            right: -120px;
             animation-delay: 4s;
         }
 
+        .hero-inner {
+            display: grid;
+            gap: clamp(32px, 6vw, 48px);
+            align-items: center;
+            justify-items: center;
+        }
+
+        .hero-title {
+            text-align: center;
+            max-width: 720px;
+        }
+
+        .hero-title span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(9, 10, 30, 0.5);
+            color: var(--accent-hot);
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            margin-bottom: 22px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.6rem, 6vw, 3.8rem);
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+        }
+
+        .hero-title p {
+            margin-top: 18px;
+            margin-bottom: 0;
+            color: var(--text-secondary);
+            font-size: clamp(1.05rem, 3vw, 1.28rem);
+        }
+
         .hero-card {
-            width: min(900px, 92vw);
-            padding: clamp(32px, 5vw, 56px);
+            width: min(840px, 90vw);
+            background: linear-gradient(130deg, rgba(10, 11, 32, 0.75), rgba(16, 22, 57, 0.9));
             border-radius: 28px;
-            background: var(--surface);
+            padding: clamp(28px, 6vw, 46px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: var(--shadow);
+            backdrop-filter: blur(24px);
             display: grid;
-            gap: 32px;
-            position: relative;
+            gap: 26px;
         }
 
-        .hero-copy {
-            display: grid;
-            gap: 20px;
+        .hero-card-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .eyebrow {
+        .hero-card-header h2 {
+            margin: 0;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.6rem, 4vw, 2.1rem);
+        }
+
+        .release-chip {
             display: inline-flex;
             align-items: center;
             gap: 10px;
+            padding: 6px 14px;
             border-radius: 999px;
-            padding: 8px 16px;
-            font-size: 0.85rem;
+            background: rgba(88, 101, 242, 0.22);
+            color: rgba(255, 255, 255, 0.86);
             font-weight: 600;
-            color: var(--accent-strong);
-            background: var(--accent-soft);
-            width: fit-content;
+            font-size: 0.82rem;
         }
 
-        .hero h1 {
-            font-size: clamp(2.6rem, 6vw, 3.8rem);
-            letter-spacing: -0.04em;
-            line-height: 1.05;
-            margin: 0;
+        .hero-card-body {
+            display: grid;
+            gap: 24px;
         }
 
-        .hero p {
-            margin: 0;
-            font-size: clamp(1.05rem, 2.4vw, 1.2rem);
-            color: var(--ink-soft);
-            max-width: 560px;
-        }
-
-        .hero-actions {
+        .waitlist-form {
             display: flex;
             flex-wrap: wrap;
-            gap: 16px;
-            align-items: center;
+            gap: 14px;
         }
 
-        .btn {
-            padding: 16px 28px;
+        .waitlist-form input {
+            flex: 1 1 240px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(5, 5, 20, 0.65);
+            padding: 14px 20px;
+            color: var(--text-primary);
+            font-size: 0.98rem;
+            transition: border 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .waitlist-form input:focus {
+            outline: none;
+            border-color: rgba(94, 234, 212, 0.55);
+            box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.15);
+        }
+
+        .waitlist-form button {
+            flex: 0 0 auto;
+            padding: 14px 26px;
             border-radius: 999px;
             border: none;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.98rem;
             cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+            background: linear-gradient(120deg, #5b6bf7, #36c6f4);
             color: white;
-            box-shadow: 0 16px 40px rgba(84, 101, 255, 0.35);
+            box-shadow: 0 20px 45px rgba(54, 198, 244, 0.4);
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 24px 50px rgba(84, 101, 255, 0.45);
+        .waitlist-form button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 28px 65px rgba(54, 198, 244, 0.55);
         }
 
-        .btn-ghost {
-            background: var(--surface);
-            color: var(--ink);
-            border: 1px solid var(--border);
-        }
-
-        .btn-ghost:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
-        }
-
-        .metrics {
+        .hero-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
+            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         }
 
-        .metric {
-            padding: 16px;
-            border-radius: 16px;
-            background: var(--surface-muted);
-            border: 1px solid var(--border);
+        .stat {
+            background: rgba(11, 11, 32, 0.6);
+            padding: 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             text-align: center;
         }
 
-        .metric span {
-            display: block;
-            font-size: 2rem;
+        .stat h3 {
+            margin: 0;
+            font-size: 1.4rem;
             font-weight: 700;
-            letter-spacing: -0.02em;
+            color: white;
         }
 
-        section {
-            padding: 120px 0;
+        .stat span {
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            text-transform: uppercase;
         }
 
-        .section-heading {
+        .features-grid {
             display: grid;
-            gap: 12px;
-            margin-bottom: 64px;
-            max-width: 680px;
-        }
-
-        .section-heading h2 {
-            font-size: clamp(2rem, 4vw, 2.8rem);
-            margin: 0;
-            letter-spacing: -0.03em;
-        }
-
-        .section-heading p {
-            margin: 0;
-            color: var(--ink-soft);
-            font-size: 1.05rem;
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 28px;
+            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         }
 
         .feature-card {
-            background: var(--surface);
-            border-radius: 24px;
-            padding: 32px;
-            border: 1px solid transparent;
-            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
+            position: relative;
+            padding: 26px;
+            border-radius: 22px;
+            background: linear-gradient(145deg, rgba(11, 13, 36, 0.72), rgba(21, 24, 56, 0.8));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            transition: transform 0.45s ease, border 0.45s ease;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.45s ease;
         }
 
         .feature-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
-            border: 1px solid rgba(84, 101, 255, 0.25);
+            border-color: rgba(94, 234, 212, 0.35);
+        }
+
+        .feature-card:hover::after {
+            opacity: 1;
         }
 
         .feature-icon {
             width: 48px;
             height: 48px;
-            border-radius: 12px;
-            background: var(--accent-soft);
-            color: var(--accent-strong);
+            border-radius: 14px;
             display: grid;
             place-items: center;
-            margin-bottom: 24px;
+            background: rgba(94, 234, 212, 0.12);
+            border: 1px solid rgba(94, 234, 212, 0.2);
+            margin-bottom: 18px;
         }
 
         .feature-card h3 {
-            margin: 0 0 12px 0;
-            font-size: 1.2rem;
+            margin: 0;
+            font-size: 1.08rem;
+            color: #f8faff;
         }
 
         .feature-card p {
+            margin-top: 12px;
+            color: var(--text-secondary);
+            font-size: 0.94rem;
+        }
+
+        .section-header {
+            max-width: 680px;
+            margin-bottom: clamp(32px, 6vw, 48px);
+        }
+
+        .section-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4.6vw, 2.8rem);
+            margin: 0 0 14px;
+        }
+
+        .section-header p {
             margin: 0;
-            color: var(--ink-soft);
-            font-size: 0.98rem;
-            line-height: 1.6;
-        }
-
-        .product-tour {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 40px;
-            align-items: center;
-        }
-
-        .product-tour .copy {
-            display: grid;
-            gap: 24px;
-        }
-
-        .product-tour .visual {
-            position: relative;
-            border-radius: 28px;
-            background: radial-gradient(circle at top left, rgba(84, 101, 255, 0.15), transparent 60%);
-            padding: 32px;
-            box-shadow: var(--shadow);
-        }
-
-        .product-tour .visual img {
-            width: 100%;
-            border-radius: 18px;
-            border: 1px solid var(--border);
-        }
-
-        .product-tour ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: grid;
-            gap: 20px;
-        }
-
-        .product-tour li {
-            padding: 20px 24px;
-            border-radius: 20px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.04);
-        }
-
-        .product-tour li h3 {
-            margin: 0 0 8px 0;
-            font-size: 1.05rem;
-        }
-
-        .product-tour li p {
-            margin: 0;
-            color: var(--ink-soft);
-        }
-
-        .marquee {
-            display: flex;
-            overflow: hidden;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
-        }
-
-        .marquee-track {
-            display: flex;
-            gap: 36px;
-            padding: 20px 32px;
-            animation: marquee 28s linear infinite;
-            white-space: nowrap;
-        }
-
-        .marquee-item {
-            font-weight: 500;
-            color: var(--ink-soft);
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .marquee-item::before {
-            content: "";
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--accent);
-        }
-
-        .roadmap {
-            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%);
-            border-radius: 32px;
-            padding: 48px;
-            border: 1px solid var(--border);
-            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
-        }
-
-        .roadmap-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 32px;
-        }
-
-        .roadmap-column h3 {
+            color: var(--text-secondary);
             font-size: 1rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--ink-soft);
-            margin-bottom: 16px;
         }
 
-        .roadmap-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: grid;
-            gap: 14px;
-        }
-
-        .roadmap-list li {
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: rgba(84, 101, 255, 0.06);
-            color: var(--ink);
-            font-weight: 500;
-        }
-
-        .testimonials {
+        .app-preview {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 32px;
-        }
-
-        .testimonial {
-            background: var(--surface);
-            border-radius: 24px;
-            padding: 32px;
-            border: 1px solid var(--border);
-            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
-            display: grid;
-            gap: 18px;
-        }
-
-        .testimonial p {
-            margin: 0;
-            color: var(--ink-soft);
-            font-size: 0.98rem;
-        }
-
-        .testimonial strong {
-            font-size: 1rem;
-        }
-
-        .cta {
-            padding: 120px 0 140px;
-        }
-
-        .cta-card {
-            background: var(--ink);
-            color: white;
-            border-radius: 36px;
-            padding: clamp(48px, 10vw, 72px);
-            display: grid;
-            gap: 32px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cta-card::before,
-        .cta-card::after {
-            content: "";
-            position: absolute;
-            width: 420px;
-            height: 420px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(84, 101, 255, 0.45), transparent 65%);
-            filter: blur(40px);
-            animation: pulse 16s ease-in-out infinite;
-        }
-
-        .cta-card::before {
-            top: -240px;
-            right: -160px;
-        }
-
-        .cta-card::after {
-            bottom: -260px;
-            left: -120px;
-            animation-delay: 6s;
-        }
-
-        .cta-card h2 {
-            font-size: clamp(2.4rem, 4vw, 3rem);
-            margin: 0;
-            letter-spacing: -0.03em;
-        }
-
-        .cta-card p {
-            margin: 0;
-            font-size: 1.05rem;
-            max-width: 560px;
-            color: rgba(255, 255, 255, 0.82);
-        }
-
-        footer {
-            padding: 60px 0;
-            border-top: 1px solid var(--border);
-            background: var(--surface);
-        }
-
-        .footer-content {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 24px;
             align-items: center;
         }
 
-        .footer-nav {
-            display: flex;
+        .device-mock {
+            position: relative;
+            width: min(360px, 100%);
+            aspect-ratio: 0.48;
+            border-radius: 36px;
+            padding: 18px;
+            background: linear-gradient(160deg, rgba(26, 32, 90, 0.8), rgba(88, 101, 242, 0.45));
+            box-shadow: 0 28px 70px rgba(5, 8, 30, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            margin: 0 auto;
+        }
+
+        .device-mock::after {
+            content: '';
+            position: absolute;
+            inset: 12px;
+            border-radius: 28px;
+            background: linear-gradient(160deg, rgba(10, 12, 35, 0.9), rgba(21, 28, 66, 0.9));
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04);
+        }
+
+        .device-ui {
+            position: absolute;
+            inset: 26px;
+            border-radius: 24px;
+            background: linear-gradient(140deg, rgba(18, 23, 60, 0.9), rgba(17, 39, 89, 0.8));
+            padding: 24px;
+            display: grid;
             gap: 18px;
+            color: white;
             font-size: 0.92rem;
-            color: var(--ink-soft);
         }
 
-        .footer-copy {
-            font-size: 0.85rem;
-            color: var(--ink-soft);
+        .device-ui .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(94, 234, 212, 0.18);
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
         }
 
-        /* Interactions */
-        @keyframes float {
-            0%, 100% { transform: translate3d(0, 0, 0); }
-            50% { transform: translate3d(0, 18px, 0); }
+        .device-ui h3 {
+            margin: 0;
+            font-size: 1.18rem;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.6; }
-            50% { transform: scale(1.1); opacity: 0.8; }
+        .device-ui ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 10px;
+            color: rgba(224, 232, 255, 0.82);
         }
 
-        @keyframes marquee {
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); }
+        .device-ui li::before {
+            content: '•';
+            margin-right: 8px;
+            color: rgba(94, 234, 212, 0.8);
         }
 
-        .reveal {
+        .platform-card {
+            background: linear-gradient(145deg, rgba(12, 11, 30, 0.74), rgba(21, 20, 46, 0.88));
+            border-radius: 24px;
+            padding: clamp(28px, 6vw, 38px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            gap: 18px;
+        }
+
+        .platform-card h3 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        .platform-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .tag {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: rgba(229, 237, 255, 0.86);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+        }
+
+        .tag.active {
+            background: rgba(88, 101, 242, 0.35);
+            border-color: rgba(88, 101, 242, 0.55);
+            color: white;
+        }
+
+        .roadmap {
+            display: grid;
+            gap: 18px;
+        }
+
+        .roadmap-item {
+            display: grid;
+            gap: 8px;
+            padding: 18px 20px;
+            border-radius: 20px;
+            background: rgba(11, 13, 36, 0.62);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .roadmap-item span {
+            font-size: 0.74rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.62);
+        }
+
+        .roadmap-item p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        .cta {
+            text-align: center;
+            padding-bottom: clamp(90px, 18vw, 140px);
+        }
+
+        .cta-card {
+            width: min(720px, 92vw);
+            margin: 0 auto;
+            padding: clamp(36px, 8vw, 48px);
+            border-radius: 32px;
+            background: linear-gradient(160deg, rgba(15, 18, 48, 0.85), rgba(88, 101, 242, 0.38));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow);
+        }
+
+        .cta-card h2 {
+            font-family: 'Playfair Display', serif;
+            margin: 0 0 18px;
+            font-size: clamp(2.2rem, 5vw, 2.8rem);
+        }
+
+        .cta-card p {
+            margin: 0 0 26px;
+            color: var(--text-secondary);
+        }
+
+        .cta-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 999px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.35s ease, box-shadow 0.35s ease, background 0.35s ease, border 0.35s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(120deg, rgba(88, 101, 242, 0.95), rgba(54, 198, 244, 0.8));
+            color: white;
+            box-shadow: 0 24px 50px rgba(88, 101, 242, 0.45);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 32px 70px rgba(88, 101, 242, 0.6);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: rgba(229, 237, 255, 0.92);
+            border-color: rgba(229, 237, 255, 0.28);
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(54, 198, 244, 0.55);
+            background: rgba(54, 198, 244, 0.12);
+        }
+
+        footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 28px 0;
+            text-align: center;
+            color: rgba(191, 200, 229, 0.6);
+            font-size: 0.84rem;
+            letter-spacing: 0.12em;
+        }
+
+        [data-animate] {
             opacity: 0;
-            transform: translateY(28px);
-            transition: opacity 0.7s ease, transform 0.7s ease;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
         }
 
-        .reveal.visible {
+        [data-animate].in-view {
             opacity: 1;
             transform: translateY(0);
         }
 
+        @keyframes float {
+            0%, 100% {
+                transform: translate3d(0, -8px, 0) scale(1);
+            }
+            50% {
+                transform: translate3d(0, 8px, 0) scale(1.04);
+            }
+        }
+
         @media (max-width: 900px) {
             header {
-                position: static;
+                position: sticky;
+                top: 0;
             }
 
             .nav {
-                flex-wrap: wrap;
-                gap: 16px;
+                gap: 18px;
             }
 
             .nav-links {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .nav-cta {
-                width: 100%;
-                display: flex;
-                justify-content: center;
+                display: none;
             }
 
             .hero-card {
+                padding: clamp(24px, 8vw, 40px);
+            }
+
+            .hero-card-header {
+                justify-content: center;
                 text-align: center;
             }
 
-            .hero-copy p {
-                margin: 0 auto;
+            .hero-card-body {
+                text-align: center;
             }
 
-            .hero-actions {
+            .waitlist-form {
                 justify-content: center;
             }
 
-            .metrics {
+            .waitlist-form button {
+                width: 100%;
+                max-width: 220px;
+            }
+
+            .app-preview {
                 text-align: center;
             }
 
-            .product-tour {
-                grid-template-columns: 1fr;
-            }
-
-            .cta-card {
+            .platform-card {
                 text-align: center;
             }
 
-            .cta-card p {
-                margin: 0 auto;
+            .platform-tags {
+                justify-content: center;
             }
         }
 
         @media (max-width: 600px) {
             .hero-card {
                 border-radius: 22px;
-                padding: 28px;
             }
 
-            section {
-                padding: 80px 0;
+            .hero-card-header h2 {
+                font-size: 1.5rem;
             }
 
-            .roadmap {
-                padding: 32px;
+            .hero-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .device-ui {
+                inset: 22px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="page">
+    <div class="page-shell">
         <header>
-            <div class="container nav">
-                <a class="brand" href="#top">
-                    <img src="https://raw.githubusercontent.com/Mr-Dark-debug/EchoGen.ai/main/lib/assets/logo.png" alt="EchoGen.ai logo">
-                    EchoGen.ai
+            <nav class="nav">
+                <a class="brand" href="#hero">
+                    <span class="brand-mark"></span>
+                    <span>EchoGen.ai</span>
                 </a>
-                <nav class="nav-links">
+                <div class="nav-links">
                     <a href="#features">Features</a>
-                    <a href="#tour">Product Tour</a>
+                    <a href="#experience">Experience</a>
+                    <a href="#platforms">Platforms</a>
                     <a href="#roadmap">Roadmap</a>
-                    <a href="#testimonials">Voices</a>
-                </nav>
+                </div>
                 <div class="nav-cta">
-                    <a href="#download">Start Creating</a>
+                    <a href="#waitlist" aria-label="Join the EchoGen.ai waitlist">Join the waitlist</a>
                 </div>
-            </div>
+            </nav>
         </header>
-
-        <main id="top">
-            <section class="hero">
-                <div class="hero-card reveal visible">
-                    <div class="hero-copy">
-                        <span class="eyebrow">Introducing Release v0.3.0</span>
-                        <h1>Launch polished, AI-generated podcasts without the production overhead.</h1>
-                        <p>EchoGen.ai captures your articles, research, and news, then turns them into stunning audio shows ready to publish everywhere. A minimal workflow, orchestrated by automation you can trust.</p>
-                        <div class="hero-actions">
-                            <a class="btn btn-primary" href="#download">Download the Desktop App</a>
-                            <a class="btn btn-ghost" href="https://www.producthunt.com/posts/echogen-ai" target="_blank" rel="noopener">See the Product Hunt Launch</a>
+        <main>
+            <section id="hero" class="section hero">
+                <div class="hero-inner" data-animate>
+                    <div class="hero-title">
+                        <span>Version 0.2.1</span>
+                        <h1>AI-crafted podcasts designed on your Android device.</h1>
+                        <p>
+                            EchoGen.ai brings studio-grade storytelling to mobile creators. Craft scripts, generate lifelike
+                            narration, and publish polished episodes wherever inspiration strikes.
+                        </p>
+                    </div>
+                    <div class="hero-card" id="waitlist">
+                        <div class="hero-card-header">
+                            <h2>Join the early access collective</h2>
+                            <div class="release-chip">Release • v0.2.1</div>
                         </div>
-                    </div>
-                    <div class="metrics">
-                        <div class="metric">
-                            <span>3x</span>
-                            Faster publishing cadence
-                        </div>
-                        <div class="metric">
-                            <span>94%</span>
-                            Average editing time saved
-                        </div>
-                        <div class="metric">
-                            <span>20k+</span>
-                            Episodes rendered in beta
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="features">
-                <div class="container">
-                    <div class="section-heading reveal">
-                        <span class="eyebrow">Crafted for scale</span>
-                        <h2>Everything you need to ship professional audio from written ideas.</h2>
-                        <p>From content ingestion to polished delivery, EchoGen.ai handles the heavy lifting with a calm, minimal interface built for teams and creators.</p>
-                    </div>
-                    <div class="feature-grid">
-                        <article class="feature-card reveal">
-                            <div class="feature-icon">🎙️</div>
-                            <h3>Zero-friction workflows</h3>
-                            <p>Ingest URLs, PDFs, or research notes. EchoGen.ai auto-summarizes, scripts, and prepares segments so you can focus on storytelling.</p>
-                        </article>
-                        <article class="feature-card reveal">
-                            <div class="feature-icon">✨</div>
-                            <h3>Adaptive AI voices</h3>
-                            <p>Choose from expressive voice styles tuned for narrative, explainers, or interviews, powered by multi-model synthesis.</p>
-                        </article>
-                        <article class="feature-card reveal">
-                            <div class="feature-icon">🪄</div>
-                            <h3>Automated mixing</h3>
-                            <p>Auto-leveling, filler removal, and intro-outro branding happen instantly. Export clean WAV or publish-ready MP3.</p>
-                        </article>
-                        <article class="feature-card reveal">
-                            <div class="feature-icon">🤝</div>
-                            <h3>Collaboration-native</h3>
-                            <p>Assign teammates, review scripts, and leave timestamped comments. Context sync keeps everyone in flow.</p>
-                        </article>
-                    </div>
-                </div>
-            </section>
-
-            <section id="tour">
-                <div class="container product-tour">
-                    <div class="visual reveal">
-                        <img src="https://raw.githubusercontent.com/Mr-Dark-debug/EchoGen.ai/main/docs/assets/ui-preview.png" alt="EchoGen.ai interface preview">
-                    </div>
-                    <div class="copy">
-                        <div class="section-heading reveal">
-                            <span class="eyebrow">Designed for focus</span>
-                            <h2>Minimal UI, powerful automation.</h2>
-                            <p>Step through a calm, distraction-free interface that surfaces only what matters. Intelligent prompts guide new creators while experts stay in control.</p>
-                        </div>
-                        <ul>
-                            <li class="reveal">
-                                <h3>Unified creation canvas</h3>
-                                <p>Draft scripts, arrange segments, and audition audio takes in a single responsive workspace.</p>
-                            </li>
-                            <li class="reveal">
-                                <h3>Context-aware suggestions</h3>
-                                <p>Receive narrative tweaks, voice swaps, and pacing cues that adapt to your audience goals.</p>
-                            </li>
-                            <li class="reveal">
-                                <h3>Seamless publishing</h3>
-                                <p>One-click exports to RSS, direct uploads to your CMS, and analytics delivered in your inbox.</p>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
-            <section>
-                <div class="container">
-                    <div class="marquee reveal" aria-label="Recent release highlights">
-                        <div class="marquee-track">
-                            <div class="marquee-item">New collaboration hub shipped in v0.3.0</div>
-                            <div class="marquee-item">Faster rendering pipeline with cloud acceleration</div>
-                            <div class="marquee-item">Revamped onboarding with guided tours</div>
-                            <div class="marquee-item">Improved stability and smarter retry logic</div>
-                            <div class="marquee-item">AI voice marketplace coming soon</div>
-                            <div class="marquee-item">Automated show notes and transcripts</div>
-                            <div class="marquee-item">New collaboration hub shipped in v0.3.0</div>
-                            <div class="marquee-item">Faster rendering pipeline with cloud acceleration</div>
-                            <div class="marquee-item">Revamped onboarding with guided tours</div>
-                            <div class="marquee-item">Improved stability and smarter retry logic</div>
-                            <div class="marquee-item">AI voice marketplace coming soon</div>
-                            <div class="marquee-item">Automated show notes and transcripts</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="roadmap">
-                <div class="container">
-                    <div class="section-heading reveal">
-                        <span class="eyebrow">What's next</span>
-                        <h2>Upcoming features that keep your studio ahead.</h2>
-                        <p>The EchoGen.ai team ships continuously. Here is what we are refining, building, and dreaming up for the next releases.</p>
-                    </div>
-                    <div class="roadmap reveal">
-                        <div class="roadmap-grid">
-                            <div class="roadmap-column">
-                                <h3>Now</h3>
-                                <ul class="roadmap-list">
-                                    <li>Live collaboration with presence indicators</li>
-                                    <li>Batch episode scheduling & analytics</li>
-                                </ul>
-                            </div>
-                            <div class="roadmap-column">
-                                <h3>Next</h3>
-                                <ul class="roadmap-list">
-                                    <li>Voice marketplace with brand kits</li>
-                                    <li>Dynamic ad insertion controls</li>
-                                </ul>
-                            </div>
-                            <div class="roadmap-column">
-                                <h3>Later</h3>
-                                <ul class="roadmap-list">
-                                    <li>Multilingual dubbing pipeline</li>
-                                    <li>Audience insight dashboards</li>
-                                </ul>
-                            </div>
-                            <div class="roadmap-column">
-                                <h3>Explore</h3>
-                                <ul class="roadmap-list">
-                                    <li>Generative sound design packs</li>
-                                    <li>Self-serve automation blueprints</li>
-                                </ul>
+                        <div class="hero-card-body">
+                            <p>
+                                The Android app is live. iOS, web dashboard, and collaboration suites are arriving soon. Secure
+                                your place on the waitlist to receive insider updates and invite-only drops.
+                            </p>
+                            <form class="waitlist-form" action="#" method="post">
+                                <label class="sr-only" for="email">Email</label>
+                                <input id="email" type="email" name="email" placeholder="name@email.com" required>
+                                <button type="submit">Get notified</button>
+                            </form>
+                            <div class="hero-stats">
+                                <div class="stat">
+                                    <h3>4.8★</h3>
+                                    <span>Beta feedback</span>
+                                </div>
+                                <div class="stat">
+                                    <h3>11k+</h3>
+                                    <span>Scripts drafted</span>
+                                </div>
+                                <div class="stat">
+                                    <h3>92%</h3>
+                                    <span>Episodes published</span>
+                                </div>
+                                <div class="stat">
+                                    <h3>1m 12s</h3>
+                                    <span>Avg. render time</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section id="testimonials">
-                <div class="container">
-                    <div class="section-heading reveal">
-                        <span class="eyebrow">Loved by storytellers</span>
-                        <h2>From solo creators to enterprise studios, EchoGen.ai amplifies their reach.</h2>
-                        <p>See how teams are shipping captivating audio faster with our guided workflows and minimal UI.</p>
+            <section id="features" class="section" data-animate>
+                <div class="section-header">
+                    <h2>What makes EchoGen.ai different?</h2>
+                    <p>
+                        We obsess over seamless creation on mobile. Every workflow is optimized for quick capture, thoughtful
+                        editing, and cinematic delivery powered by responsible AI models.
+                    </p>
+                </div>
+                <div class="features-grid">
+                    <article class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 12L10 17L19 8" stroke="rgba(94,234,212,0.9)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>Guided episode flow</h3>
+                        <p>
+                            Move from idea to published podcast with guided steps for research, scripting, voice generation, and
+                            distribution—all tuned for your phone.
+                        </p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 6V12L16 14" stroke="rgba(94,234,212,0.9)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="12" cy="12" r="9" stroke="rgba(94,234,212,0.4)" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <h3>Voice twins on demand</h3>
+                        <p>
+                            Generate natural narration using custom-trained voice personalities, with emphasis on clarity,
+                            storytelling pace, and accessibility.
+                        </p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 7H20" stroke="rgba(94,234,212,0.9)" stroke-width="2.2" stroke-linecap="round"/>
+                                <path d="M4 12H16" stroke="rgba(94,234,212,0.9)" stroke-width="2.2" stroke-linecap="round"/>
+                                <path d="M4 17H12" stroke="rgba(94,234,212,0.9)" stroke-width="2.2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h3>Script intelligence</h3>
+                        <p>
+                            Turn links, transcripts, or prompts into structured scripts. Smart tone controls ensure emotions stay
+                            in the voice while the words stay clean.
+                        </p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 18V6C4 4.89543 4.89543 4 6 4H14L20 10V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18Z" stroke="rgba(94,234,212,0.9)" stroke-width="2"/>
+                                <path d="M14 4V10H20" stroke="rgba(94,234,212,0.6)" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <h3>Cover art co-pilot</h3>
+                        <p>
+                            Generate episode artwork with curated models, brand palettes, and quick refinements for every show
+                            you release.
+                        </p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 11L12 4L19 11" stroke="rgba(94,234,212,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M5 19H19" stroke="rgba(94,234,212,0.4)" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M9 19V11H15V19" stroke="rgba(94,234,212,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>Production vault</h3>
+                        <p>
+                            Keep research, drafts, audio stems, and published episodes organized with intelligent storage and
+                            fast retrieval.
+                        </p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 5V19" stroke="rgba(94,234,212,0.9)" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M5 12H19" stroke="rgba(94,234,212,0.9)" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h3>Collaboration-ready</h3>
+                        <p>
+                            Share episodes for quick review and gather inline comments (team spaces arrive with the upcoming web
+                            dashboard).
+                        </p>
+                    </article>
+                </div>
+            </section>
+
+            <section id="experience" class="section" data-animate>
+                <div class="section-header">
+                    <h2>Built for creators on the move</h2>
+                    <p>
+                        EchoGen.ai keeps the entire production workflow within reach. Draft, voice, and publish without leaving
+                        your commute, studio couch, or field interview.
+                    </p>
+                </div>
+                <div class="app-preview">
+                    <div class="device-mock" aria-hidden="true">
+                        <div class="device-ui">
+                            <span class="pill">Android first</span>
+                            <h3>Episode — Launching the future of audio</h3>
+                            <ul>
+                                <li>Research with Firecrawl-powered summarization.</li>
+                                <li>AI script polish with tone guardrails.</li>
+                                <li>Voice twins blended for inclusive delivery.</li>
+                                <li>Cover art mood board with brand-safe palettes.</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="testimonials">
-                        <article class="testimonial reveal">
-                            <p>“EchoGen.ai reduced our post-production timeline from days to hours. The scripts sound natural, and the AI voices are stunningly lifelike.”</p>
-                            <strong>Leah Carter · Head of Content, FutureWave Media</strong>
-                        </article>
-                        <article class="testimonial reveal">
-                            <p>“The collaboration tools are a dream. Reviewers can comment on timestamps, and the final mix is broadcast-ready without extra editing.”</p>
-                            <strong>Marcus Patel · Executive Producer, Signal Labs</strong>
-                        </article>
-                        <article class="testimonial reveal">
-                            <p>“We publish a daily show with a two-person team. EchoGen.ai keeps us consistent with automation that still feels personal.”</p>
-                            <strong>Riley Nguyen · Creator, Startup Frequency</strong>
-                        </article>
+                    <div class="platform-card">
+                        <h3>Platform availability</h3>
+                        <p>
+                            EchoGen.ai v0.2.1 is available today on Android. We're perfecting the experience before extending it
+                            everywhere you publish.
+                        </p>
+                        <div class="platform-tags">
+                            <span class="tag active">Android • live</span>
+                            <span class="tag">iOS • waitlist</span>
+                            <span class="tag">Web studio • building</span>
+                            <span class="tag">Desktop • research</span>
+                        </div>
+                        <div class="cta-actions" style="justify-content:flex-start;">
+                            <a class="btn btn-primary" href="https://play.google.com/store" target="_blank" rel="noopener">Download for Android</a>
+                            <a class="btn btn-secondary" href="#waitlist">Notify me about other platforms</a>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section id="download" class="cta">
-                <div class="container">
-                    <div class="cta-card reveal">
-                        <span class="eyebrow" style="color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.08);">Ready when you are</span>
-                        <h2>Spin up your AI podcast studio in minutes.</h2>
-                        <p>Install EchoGen.ai, connect your sources, and let the platform orchestrate the rest. You bring the perspective—we’ll take it to air.</p>
-                        <div class="hero-actions">
-                            <a class="btn btn-primary" href="https://github.com/Mr-Dark-debug/EchoGen.ai/releases" target="_blank" rel="noopener">Download for desktop</a>
-                            <a class="btn btn-ghost" href="https://github.com/Mr-Dark-debug/EchoGen.ai" target="_blank" rel="noopener">View on GitHub</a>
-                        </div>
+            <section id="roadmap" class="section" data-animate>
+                <div class="section-header">
+                    <h2>Roadmap to the multi-platform studio</h2>
+                    <p>
+                        We ship in fast, thoughtful cycles. Stay tuned for the upcoming drops and vote on priorities from inside
+                        the app.
+                    </p>
+                </div>
+                <div class="roadmap">
+                    <div class="roadmap-item">
+                        <span>Now shipping</span>
+                        <p>Refined Android creation journey with smarter episode timelines, adaptive themes, and faster renders.</p>
+                    </div>
+                    <div class="roadmap-item">
+                        <span>Next up</span>
+                        <p>Web dashboard for collaborative editing, waveform tweaking, and analytics on listener retention.</p>
+                    </div>
+                    <div class="roadmap-item">
+                        <span>On the horizon</span>
+                        <p>iOS beta, pro mixing suite, multi-speaker mode, and publishing automations for Spotify &amp; YouTube.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section cta" data-animate>
+                <div class="cta-card">
+                    <h2>Be first to shape EchoGen.ai</h2>
+                    <p>
+                        Join thousands of early creators guiding the next releases. Access drops, give feedback, and get
+                        production-ready faster than ever.
+                    </p>
+                    <div class="cta-actions">
+                        <a class="btn btn-primary" href="#waitlist">Claim early access</a>
+                        <a class="btn btn-secondary" href="docs/index.html">View product documentation</a>
                     </div>
                 </div>
             </section>
         </main>
-
         <footer>
-            <div class="container footer-content">
-                <div class="brand">
-                    <img src="https://raw.githubusercontent.com/Mr-Dark-debug/EchoGen.ai/main/lib/assets/logo.png" alt="EchoGen.ai logo">
-                    EchoGen.ai
-                </div>
-                <div class="footer-nav">
-                    <a href="#features">Features</a>
-                    <a href="#roadmap">Roadmap</a>
-                    <a href="#download">Downloads</a>
-                    <a href="https://github.com/Mr-Dark-debug/EchoGen.ai" target="_blank" rel="noopener">GitHub</a>
-                </div>
-                <div class="footer-copy">© <span id="year"></span> EchoGen.ai. All rights reserved.</div>
-            </div>
+            © <span id="year"></span> EchoGen.ai • Crafted for storytellers everywhere
         </footer>
     </div>
-
     <script>
         const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
+            entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
+                    entry.target.classList.add('in-view');
                     observer.unobserve(entry.target);
                 }
             });
         }, {
-            threshold: 0.2,
-            rootMargin: '0px 0px -40px 0px'
+            threshold: 0.24
         });
 
-        document.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
+        document.querySelectorAll('[data-animate]').forEach(el => observer.observe(el));
         document.getElementById('year').textContent = new Date().getFullYear();
     </script>
 </body>
