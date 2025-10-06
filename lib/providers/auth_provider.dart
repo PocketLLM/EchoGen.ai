@@ -179,6 +179,18 @@ class AuthProvider extends ChangeNotifier {
     return updated;
   }
 
+  Future<void> skipOnboarding() async {
+    DebugLogger.log(
+      'Skipping onboarding at user request',
+      category: 'AuthProvider',
+    );
+    _status = AuthStatus.authenticated;
+    if (_user != null) {
+      _user = _user!.copyWith(onboardingCompleted: true);
+    }
+    notifyListeners();
+  }
+
   Future<AccountDeletionStatusModel> scheduleAccountDeletion() async {
     final token = _requireToken();
     final statusModel = await _apiService.scheduleAccountDeletion(token);
