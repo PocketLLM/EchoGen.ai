@@ -107,6 +107,16 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
     }
   }
 
+  Future<void> _skipOnboarding() async {
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.skipOnboarding();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      (_) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -193,6 +203,13 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                         : Text(_currentPage == _questions.length - 1 ? 'Finish' : 'Next'),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton(
+                  onPressed: _isSubmitting ? null : _skipOnboarding,
+                  child: const Text('Skip for now'),
+                ),
               ),
             ],
           ),
