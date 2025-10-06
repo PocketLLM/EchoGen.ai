@@ -3,1373 +3,895 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EchoGen.ai - Transform Content into AI-Powered Podcasts</title>
+    <title>EchoGen.ai — The Minimal SaaS Platform for AI-Generated Podcasts</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4A5FF7;
-            --primary-light: #6B7BFF;
-            --primary-dark: #3347D4;
-            --secondary: #FF6B6B;
-            --background: #FAFBFC;
-            --surface: #FFFFFF;
-            --text-primary: #1A1D29;
-            --text-secondary: #6B7280;
-            --border: #E5E7EB;
+            --background: #f6f7fb;
+            --surface: #ffffff;
+            --surface-muted: rgba(255, 255, 255, 0.6);
+            --ink: #0f172a;
+            --ink-soft: #4b5563;
+            --accent: #5465ff;
+            --accent-soft: rgba(84, 101, 255, 0.08);
+            --accent-strong: #303ad9;
+            --border: rgba(15, 23, 42, 0.08);
+            --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
+        *, *::before, *::after {
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
+            margin: 0;
+            padding: 0;
             font-family: 'Inter', sans-serif;
-            background-color: var(--background);
-            color: var(--text-primary);
-            line-height: 1.6;
+            color: var(--ink);
+            background: var(--background);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
             overflow-x: hidden;
         }
 
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
+        a {
+            color: inherit;
+            text-decoration: none;
         }
 
-        section {
-            padding: 100px 0;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s ease;
-        }
-
-        .section-title.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .section-subtitle {
-            color: var(--text-secondary);
-            font-size: 1.2rem;
-            text-align: center;
-            max-width: 700px;
-            margin: 0 auto 60px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s ease 0.2s;
-        }
-
-        .section-subtitle.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Hero section styles */
-        .hero {
+        .page {
             min-height: 100vh;
             display: flex;
-            align-items: center;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            position: relative;
-            overflow: hidden;
-            padding-top: 80px;
+            flex-direction: column;
         }
 
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            color: white;
-            padding: 40px 0;
+        .container {
+            width: min(1200px, 92vw);
+            margin: 0 auto;
         }
 
-        .hero-logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 5px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            opacity: 0;
-            animation: fadeUp 0.8s ease forwards 0.1s;
-            overflow: hidden;
-        }
-        
-        .hero-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-        
-        .hero-title {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            opacity: 0;
-            transform: translateY(30px);
-            animation: fadeUp 0.8s ease forwards 0.3s;
-        }
-
-        .hero-subtitle {
-            font-size: 1.5rem;
-            font-weight: 400;
-            margin-bottom: 2.5rem;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-            opacity: 0;
-            transform: translateY(30px);
-            animation: fadeUp 0.8s ease forwards 0.6s;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 16px 32px;
-            background-color: var(--surface);
-            color: var(--primary);
-            font-weight: 600;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            opacity: 0;
-            transform: translateY(30px);
-            animation: fadeUp 0.8s ease forwards 0.9s;
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-primary {
-            background-color: var(--secondary);
-            color: white;
-            margin-right: 15px;
-        }
-
-        .btn-ph {
-            background-color: #DA552E;
-            color: white;
-            margin-right: 15px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-ph:hover {
-            background-color: #b84726;
-        }
-
-        #hero-canvas {
-            position: absolute;
+        header {
+            position: sticky;
             top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
+            z-index: 100;
+            backdrop-filter: blur(14px);
+            background: rgba(246, 247, 251, 0.75);
+            border-bottom: 1px solid var(--border);
         }
 
-        /* Wave animation */
-        .wave {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            overflow: hidden;
-            line-height: 0;
-            transform: rotate(180deg);
-        }
-
-        .wave svg {
-            position: relative;
-            display: block;
-            width: calc(100% + 1.3px);
-            height: 120px;
-        }
-
-        .wave .shape-fill {
-            fill: var(--background);
-        }
-
-        /* Features section */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 50px;
-        }
-
-        .feature-card {
-            background: var(--surface);
-            border-radius: 16px;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            transition: all 0.4s ease;
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        .feature-card.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .feature-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 25px;
+        .nav {
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: rgba(74, 95, 247, 0.1);
-            border-radius: 50%;
+            justify-content: space-between;
+            padding: 20px 0;
         }
 
-        .feature-icon svg {
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .brand img {
             width: 40px;
             height: 40px;
         }
 
-        .feature-title {
-            font-size: 1.5rem;
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a {
+            color: var(--ink-soft);
+            transition: color 0.25s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--ink);
+        }
+
+        .nav-cta a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            background: var(--ink);
+            color: white;
             font-weight: 600;
-            margin-bottom: 15px;
+            font-size: 0.95rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.15);
         }
 
-        /* Animations */
-        @keyframes fadeUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .nav-cta a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 50px rgba(15, 23, 42, 0.22);
         }
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
+        main {
+            flex: 1;
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 1.2rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .btn {
-                display: block;
-                width: 100%;
-                margin-bottom: 15px;
-            }
-            
-            .btn-primary {
-                margin-right: 0;
-            }
+        .hero {
+            position: relative;
+            padding: clamp(120px, 20vh, 180px) 0 140px;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
         }
-    /* Detailed Features - Accordion */
-    .detailed-features {
-        background: var(--background);
-        padding: 100px 0;
-    }
-    
-    .accordion {
-        max-width: 800px;
-        margin: 40px auto 0;
-    }
-    
-    .accordion-item {
-        border-radius: 8px;
-        margin-bottom: 15px;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        background: var(--surface);
-    }
-    
-    .accordion-header {
-        width: 100%;
-        padding: 20px;
-        text-align: left;
-        background: none;
-        border: none;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .accordion-header::after {
-        content: '+';
-        font-size: 1.5rem;
-        transition: transform 0.3s ease;
-    }
-    
-    .accordion-header.active::after {
-        content: '-';
-    }
-    
-    .accordion-content {
-        padding: 0 20px;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.4s cubic-bezier(0.65, 0, 0.35, 1);
-    }
-    
-    .accordion-content p {
-        padding: 20px 0;
-    }
-    /* Screenshots Gallery */
-    .screenshots {
-        background: var(--surface);
-        padding: 100px 0;
-    }
-    
-    .carousel {
-        position: relative;
-        max-width: 800px;
-        margin: 50px auto 0;
-        overflow: hidden;
-    }
-    
-    .carousel-track {
-        display: flex;
-        transition: transform 0.5s ease;
-    }
-    
-    .carousel-slide {
-        min-width: 100%;
-        padding: 0 15px;
-    }
-    
-    .screenshot {
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 15px 50px rgba(0,0,0,0.1);
-    }
-    
-    .carousel-controls {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 30px;
-    }
-    
-    .carousel-btn {
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-    }
-    
-    .carousel-btn:hover {
-        background: var(--primary-dark);
-        transform: scale(1.1);
-    }
-    
-    .carousel-dots {
-        display: flex;
-        justify-content: center;
-        margin: 0 20px;
-    }
-    
-    .dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: #ddd;
-        margin: 0 5px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .dot.active {
-        background: var(--primary);
-        transform: scale(1.2);
-    }
-    /* How It Works */
-    .how-it-works {
-        background: var(--background);
-        padding: 100px 0;
-    }
-    
-    .process-steps {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        max-width: 1200px;
-        margin: 60px auto 0;
-    }
-    
-    .step {
-        flex: 0 0 20%;
-        padding: 20px;
-        text-align: center;
-        position: relative;
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.6s ease;
-    }
-    
-    .step.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    
-    .step-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 20px;
-        background: rgba(74, 95, 247, 0.1);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .step-icon svg {
-        width: 40px;
-        height: 40px;
-        color: var(--primary);
-    }
-    
-    .step h3 {
-        font-size: 1.3rem;
-        margin-bottom: 10px;
-        color: var(--text-primary);
-    }
-    
-    .step p {
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-    }
-    
-    /* Connector lines between steps */
-    .step:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        top: 40px;
-        right: -10px;
-        width: 20%;
-        height: 2px;
-        background: var(--primary-light);
-        z-index: -1;
-    }
-    
-    @media (max-width: 768px) {
-        .step {
-            flex: 0 0 100%;
-            margin-bottom: 40px;
-        }
-        
-        .step:not(:last-child)::after {
-            content: '';
+
+        .hero::before,
+        .hero::after {
+            content: "";
             position: absolute;
-            top: auto;
-            bottom: -20px;
-            left: 50%;
-            width: 2px;
-            height: 40px;
-            transform: translateX(-50%);
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.5;
+            animation: float 16s ease-in-out infinite;
         }
-    }
-    /* Installation Section */
-    .installation {
-        background: var(--surface);
-        padding: 100px 0;
-    }
-    
-    .terminal-container {
-        max-width: 700px;
-        margin: 40px auto;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-    
-    .terminal-header {
-        background: #2c2c2c;
-        padding: 10px 15px;
-        display: flex;
-        align-items: center;
-    }
-    
-    .terminal-dots {
-        display: flex;
-        gap: 6px;
-    }
-    
-    .dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-    }
-    
-    .dot.red { background: #ff5f56; }
-    .dot.yellow { background: #ffbd2e; }
-    .dot.green { background: #27c93f; }
-    
-    .terminal-title {
-        color: #aaa;
-        font-size: 0.9rem;
-        text-align: center;
-        flex-grow: 1;
-    }
-    
-    .terminal-body {
-        background: #1e1e1e;
-        padding: 20px;
-        font-family: monospace;
-        color: #d4d4d4;
-        min-height: 180px;
-        position: relative;
-    }
-    
-    .terminal-line {
-        margin-bottom: 8px;
-        opacity: 0;
-        animation: fadeIn 0.5s ease forwards;
-    }
-    
-    .terminal-line:nth-child(1) { animation-delay: 0.5s; }
-    .terminal-line:nth-child(2) { animation-delay: 1s; }
-    .terminal-line:nth-child(3) { animation-delay: 1.5s; }
-    .terminal-line:nth-child(4) { animation-delay: 2s; }
-    
-    .prompt {
-        color: #27c93f;
-        margin-right: 10px;
-    }
-    
-    .terminal-cursor {
-        display: inline-block;
-        animation: blink 1s infinite;
-    }
-    
-    .platforms {
-        text-align: center;
-        margin-top: 60px;
-    }
-    
-    .platform-badges {
-        display: flex;
-        justify-content: center;
-        gap: 40px;
-        margin-top: 20px;
-    }
-    
-    .platform-badge {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        font-weight: 600;
-        color: var(--text-primary);
-        transition: transform 0.3s ease;
-    }
-    
-    .platform-badge:hover {
-        transform: translateY(-5px);
-    }
-    
-    .platform-badge svg {
-        width: 50px;
-        height: 50px;
-        padding: 10px;
-        background: rgba(74, 95, 247, 0.1);
-        border-radius: 50%;
-    }
-    
-    @keyframes fadeIn {
-        to { opacity: 1; }
-    }
-    
-    @keyframes blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0; }
-    }
-    /* Testimonials Section */
-    .testimonials {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-        color: white;
-        padding: 100px 0;
-        position: relative;
-    }
-    
-    .stats {
-        display: flex;
-        justify-content: center;
-        gap: 50px;
-        margin: 40px 0 60px;
-    }
-    
-    .stat {
-        text-align: center;
-    }
-    
-    .stat-number {
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-    
-    .stat-label {
-        font-size: 1.1rem;
-        opacity: 0.9;
-    }
-    
-    .testimonials-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 30px;
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-    
-    .testimonial-card {
-        background: rgba(255, 255, 255, 0.1);
-        -webkit-backdrop-filter: blur(10px); /* Safari support */
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .testimonial-content {
-        font-style: italic;
-        margin-bottom: 20px;
-        font-size: 1.1rem;
-        line-height: 1.7;
-    }
-    
-    .testimonial-author {
-        font-weight: 600;
-    }
-    
-    .author-title {
-        font-weight: 400;
-        opacity: 0.8;
-        font-size: 0.9rem;
-    }
-    
-    .github-cta {
-        text-align: center;
-        margin-top: 50px;
-    }
-    
-    .github-cta .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        background: white;
-        color: var(--primary);
-        padding: 12px 30px;
-        font-weight: 600;
-    }
-    
-    .github-cta .btn svg {
-        width: 20px;
-        height: 20px;
-    }
-    
-    /* Footer */
-    .footer-wave {
-        transform: rotate(180deg);
-        margin-bottom: -1px;
-    }
-    
-    .footer-content {
-        background: var(--primary-dark);
-        color: white;
-        padding: 60px 0 30px;
-    }
-    
-    .social-links {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-    
-    .social-links a {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        transition: all 0.3s ease;
-    }
-    
-    .social-links a:hover {
-        background: var(--primary-light);
-        transform: translateY(-5px);
-    }
-    
-    .social-links svg {
-        width: 24px;
-        height: 24px;
-    }
-    
-    .copyright {
-        text-align: center;
-        opacity: 0.7;
-        font-size: 0.9rem;
-    }
-    
-    /* Animation for number counting */
-    @keyframes countUp {
-        from {
-            transform: translateY(20px);
+
+        .hero::before {
+            width: 480px;
+            height: 480px;
+            background: rgba(84, 101, 255, 0.35);
+            top: -220px;
+            right: -120px;
+            animation-delay: 0s;
+        }
+
+        .hero::after {
+            width: 360px;
+            height: 360px;
+            background: rgba(17, 24, 39, 0.18);
+            bottom: -180px;
+            left: -100px;
+            animation-delay: 4s;
+        }
+
+        .hero-card {
+            width: min(900px, 92vw);
+            padding: clamp(32px, 5vw, 56px);
+            border-radius: 28px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+            display: grid;
+            gap: 32px;
+            position: relative;
+        }
+
+        .hero-copy {
+            display: grid;
+            gap: 20px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-strong);
+            background: var(--accent-soft);
+            width: fit-content;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.6rem, 6vw, 3.8rem);
+            letter-spacing: -0.04em;
+            line-height: 1.05;
+            margin: 0;
+        }
+
+        .hero p {
+            margin: 0;
+            font-size: clamp(1.05rem, 2.4vw, 1.2rem);
+            color: var(--ink-soft);
+            max-width: 560px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 16px 28px;
+            border-radius: 999px;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+            color: white;
+            box-shadow: 0 16px 40px rgba(84, 101, 255, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 50px rgba(84, 101, 255, 0.45);
+        }
+
+        .btn-ghost {
+            background: var(--surface);
+            color: var(--ink);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .metric {
+            padding: 16px;
+            border-radius: 16px;
+            background: var(--surface-muted);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .metric span {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        section {
+            padding: 120px 0;
+        }
+
+        .section-heading {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 64px;
+            max-width: 680px;
+        }
+
+        .section-heading h2 {
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            margin: 0;
+            letter-spacing: -0.03em;
+        }
+
+        .section-heading p {
+            margin: 0;
+            color: var(--ink-soft);
+            font-size: 1.05rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 28px;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid transparent;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
+            border: 1px solid rgba(84, 101, 255, 0.25);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--accent-soft);
+            color: var(--accent-strong);
+            display: grid;
+            place-items: center;
+            margin-bottom: 24px;
+        }
+
+        .feature-card h3 {
+            margin: 0 0 12px 0;
+            font-size: 1.2rem;
+        }
+
+        .feature-card p {
+            margin: 0;
+            color: var(--ink-soft);
+            font-size: 0.98rem;
+            line-height: 1.6;
+        }
+
+        .product-tour {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px;
+            align-items: center;
+        }
+
+        .product-tour .copy {
+            display: grid;
+            gap: 24px;
+        }
+
+        .product-tour .visual {
+            position: relative;
+            border-radius: 28px;
+            background: radial-gradient(circle at top left, rgba(84, 101, 255, 0.15), transparent 60%);
+            padding: 32px;
+            box-shadow: var(--shadow);
+        }
+
+        .product-tour .visual img {
+            width: 100%;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+        }
+
+        .product-tour ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 20px;
+        }
+
+        .product-tour li {
+            padding: 20px 24px;
+            border-radius: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.04);
+        }
+
+        .product-tour li h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.05rem;
+        }
+
+        .product-tour li p {
+            margin: 0;
+            color: var(--ink-soft);
+        }
+
+        .marquee {
+            display: flex;
+            overflow: hidden;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
+        }
+
+        .marquee-track {
+            display: flex;
+            gap: 36px;
+            padding: 20px 32px;
+            animation: marquee 28s linear infinite;
+            white-space: nowrap;
+        }
+
+        .marquee-item {
+            font-weight: 500;
+            color: var(--ink-soft);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .marquee-item::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .roadmap {
+            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%);
+            border-radius: 32px;
+            padding: 48px;
+            border: 1px solid var(--border);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+        }
+
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+        }
+
+        .roadmap-column h3 {
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin-bottom: 16px;
+        }
+
+        .roadmap-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 14px;
+        }
+
+        .roadmap-list li {
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(84, 101, 255, 0.06);
+            color: var(--ink);
+            font-weight: 500;
+        }
+
+        .testimonials {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+
+        .testimonial {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid var(--border);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.05);
+            display: grid;
+            gap: 18px;
+        }
+
+        .testimonial p {
+            margin: 0;
+            color: var(--ink-soft);
+            font-size: 0.98rem;
+        }
+
+        .testimonial strong {
+            font-size: 1rem;
+        }
+
+        .cta {
+            padding: 120px 0 140px;
+        }
+
+        .cta-card {
+            background: var(--ink);
+            color: white;
+            border-radius: 36px;
+            padding: clamp(48px, 10vw, 72px);
+            display: grid;
+            gap: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-card::before,
+        .cta-card::after {
+            content: "";
+            position: absolute;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(84, 101, 255, 0.45), transparent 65%);
+            filter: blur(40px);
+            animation: pulse 16s ease-in-out infinite;
+        }
+
+        .cta-card::before {
+            top: -240px;
+            right: -160px;
+        }
+
+        .cta-card::after {
+            bottom: -260px;
+            left: -120px;
+            animation-delay: 6s;
+        }
+
+        .cta-card h2 {
+            font-size: clamp(2.4rem, 4vw, 3rem);
+            margin: 0;
+            letter-spacing: -0.03em;
+        }
+
+        .cta-card p {
+            margin: 0;
+            font-size: 1.05rem;
+            max-width: 560px;
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        footer {
+            padding: 60px 0;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .footer-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .footer-nav {
+            display: flex;
+            gap: 18px;
+            font-size: 0.92rem;
+            color: var(--ink-soft);
+        }
+
+        .footer-copy {
+            font-size: 0.85rem;
+            color: var(--ink-soft);
+        }
+
+        /* Interactions */
+        @keyframes float {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(0, 18px, 0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        .reveal {
             opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
         }
-        to {
-            transform: translateY(0);
+
+        .reveal.visible {
             opacity: 1;
+            transform: translateY(0);
         }
-    }
+
+        @media (max-width: 900px) {
+            header {
+                position: static;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .nav-cta {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+            }
+
+            .hero-card {
+                text-align: center;
+            }
+
+            .hero-copy p {
+                margin: 0 auto;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .metrics {
+                text-align: center;
+            }
+
+            .product-tour {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-card {
+                text-align: center;
+            }
+
+            .cta-card p {
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hero-card {
+                border-radius: 22px;
+                padding: 28px;
+            }
+
+            section {
+                padding: 80px 0;
+            }
+
+            .roadmap {
+                padding: 32px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Hero Section -->
-    <section class="hero">
-        <canvas id="hero-canvas"></canvas>
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-logo">
-                    <img src="lib/assets/logo.png" alt="EchoGen.ai Logo">
-                </div>
-                <h1 class="hero-title">Transform Content into Engaging AI-Powered Podcasts</h1>
-                <p class="hero-subtitle" id="hero-subtitle"></p>
-                <div class="hero-buttons">
-                    <a href="https://www.producthunt.com/posts/echogen-ai" class="btn btn-ph" target="_blank">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 10H7.5V12.5H12.5V10Z" fill="white"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M10 0C4.47715 0 0 4.47715 0 10C0 15.5228 4.47715 20 10 20C15.5228 20 20 15.5228 20 10C20 4.47715 15.5228 0 10 0ZM7.5 5C6.11929 5 5 6.11929 5 7.5V12.5C5 13.8807 6.11929 15 7.5 15H12.5C13.8807 15 15 13.8807 15 12.5V7.5C15 6.11929 13.8807 5 12.5 5H7.5Z" fill="white"></path></svg>
-                        Featured on Product Hunt
-                    </a>
-                    <a href="#download" class="btn btn-primary">Download Now</a>
-                </div>
-            </div>
-        </div>
-        <div class="wave">
-            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" class="shape-fill"></path>
-                <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5" class="shape-fill"></path>
-                <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" class="shape-fill"></path>
-            </svg>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section id="features">
-        <div class="container">
-            <h2 class="section-title">Why EchoGen.ai?</h2>
-            <p class="section-subtitle">Powerful features that make content transformation effortless and professional</p>
-            
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <!-- SVG icon would go here -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">Smart Content Processing</h3>
-                    <p>Convert URLs, documents, and text into podcasts with intelligent script chunking to handle any content length</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <!-- SVG icon would go here -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">Background Audio Playback</h3>
-                    <p>Full background audio with notification controls, mini player, and seamless playback across all screens</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <!-- SVG icon would go here -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">AI Cover Art Generation</h3>
-                    <p>Generate stunning custom cover art using ImageRouter AI with multiple model options and centralized API management</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <!-- SVG icon would go here -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">Multi-Speaker Conversations</h3>
-                    <p>Natural conversations between multiple AI speakers with distinct voices from Gemini, OpenAI, and ElevenLabs</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <!-- SVG icon would go here -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">Enhanced User Experience</h3>
-                    <p>Improved loading messages, better error handling, and modern UI with dark/light themes</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <!-- SVG icon would go here -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                    </div>
-                    <h3 class="feature-title">Centralized API Management</h3>
-                    <p>Secure management of all API keys (Gemini, OpenAI, ElevenLabs, ImageRouter) in one convenient location</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Detailed Features Section -->
-    <section id="detailed-features" class="detailed-features">
-        <div class="container">
-            <h2 class="section-title">Detailed Features</h2>
-            <p class="section-subtitle">Explore the powerful features in detail</p>
-            
-            <div class="accordion">
-                <div class="accordion-item">
-                    <button class="accordion-header">Content Transformation</button>
-                    <div class="accordion-content">
-                        <p>Convert any URL or text into podcast format with AI-powered content adaptation. The system intelligently structures the content into a conversational format.</p>
-                    </div>
-                </div>
-                
-                <div class="accordion-item">
-                    <button class="accordion-header">Multi-Speaker Conversations</button>
-                    <div class="accordion-content">
-                        <p>Create natural-sounding conversations between multiple AI speakers. Choose from a variety of voices and assign speakers for each part of the content.</p>
-                    </div>
-                </div>
-                
-                <div class="accordion-item">
-                    <button class="accordion-header">Voice Customization</button>
-                    <div class="accordion-content">
-                        <p>Adjust the tone, speed, and emotion of each speaker to match the context of the conversation. Fine-tune the delivery for a natural listening experience.</p>
-                    </div>
-                </div>
-                
-                <div class="accordion-item">
-                    <button class="accordion-header">Export & Sharing</button>
-                    <div class="accordion-content">
-                        <p>Export your podcast in MP3 format and share it directly to your favorite platforms or save it locally on your device.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Screenshots Gallery Section -->
-    <section id="screenshots" class="screenshots">
-        <div class="container">
-            <h2 class="section-title">App Screenshots</h2>
-            <p class="section-subtitle">See EchoGen.ai in action</p>
-            
-            <div class="carousel">
-                <div class="carousel-track">
-                    <div class="carousel-slide">
-                        <div class="screenshot">
-                            <img src="lib/assets/ai_voice.png" alt="AI Voice Customization" style="width:100%; border-radius: 16px;">
-                            <div style="text-align: center; padding: 10px; font-weight: bold;">AI Voice Customization</div>
-                        </div>
-                    </div>
-                    <div class="carousel-slide">
-                        <div class="screenshot">
-                            <img src="lib/assets/app_logo.png" alt="App Logo" style="width:100%; border-radius: 16px;">
-                            <div style="text-align: center; padding: 10px; font-weight: bold;">EchoGen.ai Logo</div>
-                        </div>
-                    </div>
-                    <div class="carousel-slide">
-                        <div class="screenshot">
-                            <img src="lib/assets/mic_icon.png" alt="Microphone Icon" style="width:100%; border-radius: 16px;">
-                            <div style="text-align: center; padding: 10px; font-weight: bold;">Recording Interface</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="carousel-controls">
-                    <button class="carousel-btn prev">❮</button>
-                    <div class="carousel-dots"></div>
-                    <button class="carousel-btn next">❯</button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- How It Works Section -->
-    <section id="how-it-works" class="how-it-works">
-        <div class="container">
-            <h2 class="section-title">How It Works</h2>
-            <p class="section-subtitle">Transform your content in just a few simple steps</p>
-            
-            <div class="process-steps">
-                <div class="step">
-                    <div class="step-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                    </div>
-                    <div class="step-content">
-                        <h3>Input</h3>
-                        <p>Paste a URL or enter text content to transform into a podcast</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                    </div>
-                    <div class="step-content">
-                        <h3>Configure</h3>
-                        <p>Choose speakers, voices, and conversation style</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </div>
-                    <div class="step-content">
-                        <h3>Generate Script</h3>
-                        <p>AI creates a natural conversation script from your content</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 001.414-1.414m-2.828 2.828a9 9 0 010-12.728" />
-                        </svg>
-                    </div>
-                    <div class="step-content">
-                        <h3>Create Audio</h3>
-                        <p>Transform the script into high-quality audio with realistic voices</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                        </svg>
-                    </div>
-                    <div class="step-content">
-                        <h3>Manage</h3>
-                        <p>Edit, export, and share your podcasts</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Installation Section -->
-    <section id="installation" class="installation">
-        <div class="container">
-            <h2 class="section-title">Get Started in Seconds</h2>
-            <p class="section-subtitle">Install EchoGen.ai and start creating podcasts today</p>
-            
-            <div class="terminal-container">
-                <div class="terminal-header">
-                    <div class="terminal-dots">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                    </div>
-                    <div class="terminal-title">Terminal</div>
-                </div>
-                <div class="terminal-body">
-                    <div class="terminal-line">
-                        <span class="prompt">$</span> git clone https://github.com/Mr-Dark-debug/EchoGen.ai.git
-                    </div>
-                    <div class="terminal-line">
-                        <span class="prompt">$</span> cd EchoGen.ai
-                    </div>
-                    <div class="terminal-line">
-                        <span class="prompt">$</span> flutter pub get
-                    </div>
-                    <div class="terminal-line">
-                        <span class="prompt">$</span> flutter run
-                    </div>
-                    <div class="terminal-cursor">_</div>
-                </div>
-            </div>
-            
-            <div class="platforms">
-                <h3>Available on all platforms</h3>
-                <div class="platform-badges">
-                    <div class="platform-badge">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.05 5.65L18.46 7.07L13.58 11.95L9.11 7.47L10.52 6.06L13.59 9.13L17.05 5.65M12 2C8.73 2 5.8 3.44 4 5.83V3.04H2V9.05H8.04V7.04H4.81C6.27 5.35 8.96 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20C7.59 20 4 16.41 4 12H2C2 17.51 6.49 22 12 22C17.51 22 22 17.51 22 12C22 6.49 17.51 2 12 2Z"/>
-                        </svg>
-                        Android
-                    </div>
-                    <div class="platform-badge">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5M13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/>
-                        </svg>
-                        iOS
-                    </div>
-                    <div class="platform-badge">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M21 16H3V4H21M21 2H3C1.9 2 1 2.9 1 4V16C1 17.1 1.9 18 3 18H10V20H8V22H16V20H14V18H21C22.1 18 23 17.1 23 16V4C23 2.9 22.1 2 21 2Z"/>
-                        </svg>
-                        Desktop
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Testimonials Section -->
-    <section id="testimonials" class="testimonials">
-        <div class="container">
-            <h2 class="section-title">Loved by the Community</h2>
-            <p class="section-subtitle">Join thousands of satisfied creators</p>
-            
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-number" id="github-stars">0</div>
-                    <div class="stat-label">GitHub Stars</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number" id="github-forks">0</div>
-                    <div class="stat-label">GitHub Forks</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">5000+</div>
-                    <div class="stat-label">Active Users</div>
-                </div>
-            </div>
-            
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <div class="testimonial-content">
-                        "EchoGen.ai has completely transformed how I consume content. Now I can turn any article into a podcast during my commute!"
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-name">Sarah Johnson</div>
-                        <div class="author-title">Content Creator</div>
-                    </div>
-                </div>
-                
-                <div class="testimonial-card">
-                    <div class="testimonial-content">
-                        "The voice quality and natural conversations are incredible. My listeners can't believe it's AI-generated!"
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-name">Michael Chen</div>
-                        <div class="author-title">Podcast Host</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="github-cta">
-                <a href="https://github.com/Mr-Dark-debug/EchoGen.ai" class="btn btn-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="24px" height="24px">
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                    Star on GitHub
+    <div class="page">
+        <header>
+            <div class="container nav">
+                <a class="brand" href="#top">
+                    <img src="https://raw.githubusercontent.com/Mr-Dark-debug/EchoGen.ai/main/lib/assets/logo.png" alt="EchoGen.ai logo">
+                    EchoGen.ai
                 </a>
+                <nav class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#tour">Product Tour</a>
+                    <a href="#roadmap">Roadmap</a>
+                    <a href="#testimonials">Voices</a>
+                </nav>
+                <div class="nav-cta">
+                    <a href="#download">Start Creating</a>
+                </div>
             </div>
-        </div>
-    </section>
+        </header>
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-wave">
-            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" fill="#4A5FF7"></path>
-                <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5" fill="#4A5FF7"></path>
-                <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" fill="#4A5FF7"></path>
-            </svg>
-        </div>
-        
-        <div class="footer-content">
-            <div class="container">
-                <div class="social-links">
-                    <a href="https://github.com/Mr-Dark-debug" target="_blank" rel="noopener">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
-                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                        </svg>
-                    </a>
-                    <a href="https://twitter.com" target="_blank" rel="noopener">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
-                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                        </svg>
-                    </a>
-                    <a href="https://linkedin.com" target="_blank" rel="noopener">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
-                            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                        </svg>
-                    </a>
+        <main id="top">
+            <section class="hero">
+                <div class="hero-card reveal visible">
+                    <div class="hero-copy">
+                        <span class="eyebrow">Introducing Release v0.3.0</span>
+                        <h1>Launch polished, AI-generated podcasts without the production overhead.</h1>
+                        <p>EchoGen.ai captures your articles, research, and news, then turns them into stunning audio shows ready to publish everywhere. A minimal workflow, orchestrated by automation you can trust.</p>
+                        <div class="hero-actions">
+                            <a class="btn btn-primary" href="#download">Download the Desktop App</a>
+                            <a class="btn btn-ghost" href="https://www.producthunt.com/posts/echogen-ai" target="_blank" rel="noopener">See the Product Hunt Launch</a>
+                        </div>
+                    </div>
+                    <div class="metrics">
+                        <div class="metric">
+                            <span>3x</span>
+                            Faster publishing cadence
+                        </div>
+                        <div class="metric">
+                            <span>94%</span>
+                            Average editing time saved
+                        </div>
+                        <div class="metric">
+                            <span>20k+</span>
+                            Episodes rendered in beta
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="copyright">
-                    &copy; 2025 EchoGen.ai. All rights reserved.
+            </section>
+
+            <section id="features">
+                <div class="container">
+                    <div class="section-heading reveal">
+                        <span class="eyebrow">Crafted for scale</span>
+                        <h2>Everything you need to ship professional audio from written ideas.</h2>
+                        <p>From content ingestion to polished delivery, EchoGen.ai handles the heavy lifting with a calm, minimal interface built for teams and creators.</p>
+                    </div>
+                    <div class="feature-grid">
+                        <article class="feature-card reveal">
+                            <div class="feature-icon">🎙️</div>
+                            <h3>Zero-friction workflows</h3>
+                            <p>Ingest URLs, PDFs, or research notes. EchoGen.ai auto-summarizes, scripts, and prepares segments so you can focus on storytelling.</p>
+                        </article>
+                        <article class="feature-card reveal">
+                            <div class="feature-icon">✨</div>
+                            <h3>Adaptive AI voices</h3>
+                            <p>Choose from expressive voice styles tuned for narrative, explainers, or interviews, powered by multi-model synthesis.</p>
+                        </article>
+                        <article class="feature-card reveal">
+                            <div class="feature-icon">🪄</div>
+                            <h3>Automated mixing</h3>
+                            <p>Auto-leveling, filler removal, and intro-outro branding happen instantly. Export clean WAV or publish-ready MP3.</p>
+                        </article>
+                        <article class="feature-card reveal">
+                            <div class="feature-icon">🤝</div>
+                            <h3>Collaboration-native</h3>
+                            <p>Assign teammates, review scripts, and leave timestamped comments. Context sync keeps everyone in flow.</p>
+                        </article>
+                    </div>
                 </div>
+            </section>
+
+            <section id="tour">
+                <div class="container product-tour">
+                    <div class="visual reveal">
+                        <img src="https://raw.githubusercontent.com/Mr-Dark-debug/EchoGen.ai/main/docs/assets/ui-preview.png" alt="EchoGen.ai interface preview">
+                    </div>
+                    <div class="copy">
+                        <div class="section-heading reveal">
+                            <span class="eyebrow">Designed for focus</span>
+                            <h2>Minimal UI, powerful automation.</h2>
+                            <p>Step through a calm, distraction-free interface that surfaces only what matters. Intelligent prompts guide new creators while experts stay in control.</p>
+                        </div>
+                        <ul>
+                            <li class="reveal">
+                                <h3>Unified creation canvas</h3>
+                                <p>Draft scripts, arrange segments, and audition audio takes in a single responsive workspace.</p>
+                            </li>
+                            <li class="reveal">
+                                <h3>Context-aware suggestions</h3>
+                                <p>Receive narrative tweaks, voice swaps, and pacing cues that adapt to your audience goals.</p>
+                            </li>
+                            <li class="reveal">
+                                <h3>Seamless publishing</h3>
+                                <p>One-click exports to RSS, direct uploads to your CMS, and analytics delivered in your inbox.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="container">
+                    <div class="marquee reveal" aria-label="Recent release highlights">
+                        <div class="marquee-track">
+                            <div class="marquee-item">New collaboration hub shipped in v0.3.0</div>
+                            <div class="marquee-item">Faster rendering pipeline with cloud acceleration</div>
+                            <div class="marquee-item">Revamped onboarding with guided tours</div>
+                            <div class="marquee-item">Improved stability and smarter retry logic</div>
+                            <div class="marquee-item">AI voice marketplace coming soon</div>
+                            <div class="marquee-item">Automated show notes and transcripts</div>
+                            <div class="marquee-item">New collaboration hub shipped in v0.3.0</div>
+                            <div class="marquee-item">Faster rendering pipeline with cloud acceleration</div>
+                            <div class="marquee-item">Revamped onboarding with guided tours</div>
+                            <div class="marquee-item">Improved stability and smarter retry logic</div>
+                            <div class="marquee-item">AI voice marketplace coming soon</div>
+                            <div class="marquee-item">Automated show notes and transcripts</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="roadmap">
+                <div class="container">
+                    <div class="section-heading reveal">
+                        <span class="eyebrow">What's next</span>
+                        <h2>Upcoming features that keep your studio ahead.</h2>
+                        <p>The EchoGen.ai team ships continuously. Here is what we are refining, building, and dreaming up for the next releases.</p>
+                    </div>
+                    <div class="roadmap reveal">
+                        <div class="roadmap-grid">
+                            <div class="roadmap-column">
+                                <h3>Now</h3>
+                                <ul class="roadmap-list">
+                                    <li>Live collaboration with presence indicators</li>
+                                    <li>Batch episode scheduling & analytics</li>
+                                </ul>
+                            </div>
+                            <div class="roadmap-column">
+                                <h3>Next</h3>
+                                <ul class="roadmap-list">
+                                    <li>Voice marketplace with brand kits</li>
+                                    <li>Dynamic ad insertion controls</li>
+                                </ul>
+                            </div>
+                            <div class="roadmap-column">
+                                <h3>Later</h3>
+                                <ul class="roadmap-list">
+                                    <li>Multilingual dubbing pipeline</li>
+                                    <li>Audience insight dashboards</li>
+                                </ul>
+                            </div>
+                            <div class="roadmap-column">
+                                <h3>Explore</h3>
+                                <ul class="roadmap-list">
+                                    <li>Generative sound design packs</li>
+                                    <li>Self-serve automation blueprints</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="testimonials">
+                <div class="container">
+                    <div class="section-heading reveal">
+                        <span class="eyebrow">Loved by storytellers</span>
+                        <h2>From solo creators to enterprise studios, EchoGen.ai amplifies their reach.</h2>
+                        <p>See how teams are shipping captivating audio faster with our guided workflows and minimal UI.</p>
+                    </div>
+                    <div class="testimonials">
+                        <article class="testimonial reveal">
+                            <p>“EchoGen.ai reduced our post-production timeline from days to hours. The scripts sound natural, and the AI voices are stunningly lifelike.”</p>
+                            <strong>Leah Carter · Head of Content, FutureWave Media</strong>
+                        </article>
+                        <article class="testimonial reveal">
+                            <p>“The collaboration tools are a dream. Reviewers can comment on timestamps, and the final mix is broadcast-ready without extra editing.”</p>
+                            <strong>Marcus Patel · Executive Producer, Signal Labs</strong>
+                        </article>
+                        <article class="testimonial reveal">
+                            <p>“We publish a daily show with a two-person team. EchoGen.ai keeps us consistent with automation that still feels personal.”</p>
+                            <strong>Riley Nguyen · Creator, Startup Frequency</strong>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section id="download" class="cta">
+                <div class="container">
+                    <div class="cta-card reveal">
+                        <span class="eyebrow" style="color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.08);">Ready when you are</span>
+                        <h2>Spin up your AI podcast studio in minutes.</h2>
+                        <p>Install EchoGen.ai, connect your sources, and let the platform orchestrate the rest. You bring the perspective—we’ll take it to air.</p>
+                        <div class="hero-actions">
+                            <a class="btn btn-primary" href="https://github.com/Mr-Dark-debug/EchoGen.ai/releases" target="_blank" rel="noopener">Download for desktop</a>
+                            <a class="btn btn-ghost" href="https://github.com/Mr-Dark-debug/EchoGen.ai" target="_blank" rel="noopener">View on GitHub</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="container footer-content">
+                <div class="brand">
+                    <img src="https://raw.githubusercontent.com/Mr-Dark-debug/EchoGen.ai/main/lib/assets/logo.png" alt="EchoGen.ai logo">
+                    EchoGen.ai
+                </div>
+                <div class="footer-nav">
+                    <a href="#features">Features</a>
+                    <a href="#roadmap">Roadmap</a>
+                    <a href="#download">Downloads</a>
+                    <a href="https://github.com/Mr-Dark-debug/EchoGen.ai" target="_blank" rel="noopener">GitHub</a>
+                </div>
+                <div class="footer-copy">© <span id="year"></span> EchoGen.ai. All rights reserved.</div>
             </div>
-        </div>
-    </footer>
+        </footer>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- Intersection Observer for scroll animations ---
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
-                });
-            }, {
-                threshold: 0.1
-            });
-
-            document.querySelectorAll('.section-title, .section-subtitle, .feature-card, .step').forEach(el => {
-                observer.observe(el);
-            });
-
-            // --- Parallax Effect ---
-            window.addEventListener('scroll', () => {
-                const parallaxSections = document.querySelectorAll('.hero, .testimonials');
-                parallaxSections.forEach(section => {
-                    const speed = section.classList.contains('hero') ? -0.5 : -0.2;
-                    const yPos = window.pageYOffset * speed;
-                    section.style.backgroundPosition = `center ${yPos}px`;
-                });
-            });
-
-            // --- Typewriter Effect ---
-            const subtitle = document.getElementById('hero-subtitle');
-            const text = 'EchoGen.ai v0.2.0 - Now with background audio playback, AI cover art generation, smart script chunking, and centralized API management';
-            let index = 0;
-
-            function type() {
-                subtitle.textContent = text.slice(0, index);
-                index++;
-                if (index <= text.length) {
-                    setTimeout(type, 50);
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
                 }
-            }
-            type();
-
-            // --- Interactive Waveform Background ---
-            const canvas = document.getElementById('hero-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            let time = 0;
-            function drawWave() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.beginPath();
-                for (let x = 0; x < canvas.width; x++) {
-                    const y = Math.sin(x * 0.02 + time) * 20 + canvas.height / 2;
-                    ctx.lineTo(x, y);
-                }
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-                ctx.stroke();
-                time += 0.05;
-                requestAnimationFrame(drawWave);
-            }
-            drawWave();
-
-            // --- Accordion (FAQ) Functionality ---
-            const accordionHeaders = document.querySelectorAll('.accordion-header');
-            accordionHeaders.forEach(header => {
-                header.addEventListener('click', () => {
-                    const activeHeader = document.querySelector('.accordion-header.active');
-                    if (activeHeader && activeHeader !== header) {
-                        activeHeader.classList.remove('active');
-                        activeHeader.nextElementSibling.style.maxHeight = 0;
-                    }
-
-                    header.classList.toggle('active');
-                    const content = header.nextElementSibling;
-                    if (content.style.maxHeight) {
-                        content.style.maxHeight = null;
-                    } else {
-                        content.style.maxHeight = content.scrollHeight + "px";
-                    }
-                });
             });
-
-            // --- Carousel Functionality ---
-            const track = document.querySelector('.carousel-track');
-            const slides = Array.from(track.children);
-            const nextButton = document.querySelector('.carousel-btn.next');
-            const prevButton = document.querySelector('.carousel-btn.prev');
-            const dotsNav = document.querySelector('.carousel-dots');
-            
-            if (track && slides.length > 0) {
-                const slideWidth = slides[0].getBoundingClientRect().width;
-
-                // Create dots
-                slides.forEach((slide, i) => {
-                    const dot = document.createElement('button');
-                    dot.classList.add('dot');
-                    if (i === 0) dot.classList.add('active');
-                    dotsNav.appendChild(dot);
-                    dot.addEventListener('click', e => {
-                        moveToSlide(track, slides[0], slides[i]);
-                        updateDots(dotsNav.querySelector('.active'), dot);
-                    });
-                });
-
-                const dots = Array.from(dotsNav.children);
-
-                const moveToSlide = (track, currentSlide, targetSlide) => {
-                    track.style.transform = 'translateX(-' + targetSlide.style.left + ')';
-                    currentSlide.classList.remove('current-slide');
-                    targetSlide.classList.add('current-slide');
-                }
-
-                const updateDots = (currentDot, targetDot) => {
-                    currentDot.classList.remove('active');
-                    targetDot.classList.add('active');
-                }
-
-                // Arrange slides next to one another
-                const setSlidePosition = (slide, index) => {
-                    slide.style.left = slideWidth * index + 'px';
-                };
-                slides.forEach(setSlidePosition);
-
-                // Next button
-                nextButton.addEventListener('click', () => {
-                    const currentSlide = track.querySelector('.current-slide') || slides[0];
-                    let nextSlide = currentSlide.nextElementSibling;
-                    if (!nextSlide) {
-                        nextSlide = slides[0]; // Loop to start
-                    }
-                    moveToSlide(track, currentSlide, nextSlide);
-                    
-                    const currentDot = dotsNav.querySelector('.active');
-                    let nextDot = currentDot.nextElementSibling;
-                    if (!nextDot) {
-                        nextDot = dots[0];
-                    }
-                    updateDots(currentDot, nextDot);
-                });
-
-                // Prev button
-                prevButton.addEventListener('click', () => {
-                    const currentSlide = track.querySelector('.current-slide') || slides[0];
-                    let prevSlide = currentSlide.previousElementSibling;
-                    if (!prevSlide) {
-                        prevSlide = slides[slides.length - 1]; // Loop to end
-                    }
-                    moveToSlide(track, currentSlide, prevSlide);
-
-                    const currentDot = dotsNav.querySelector('.active');
-                    let prevDot = currentDot.previousElementSibling;
-                    if (!prevDot) {
-                        prevDot = dots[dots.length - 1];
-                    }
-                    updateDots(currentDot, prevDot);
-                });
-                
-                slides[0].classList.add('current-slide');
-            }
-
-
-            // --- GitHub Stats Counter ---
-            fetch('https://api.github.com/repos/Mr-Dark-debug/EchoGen.ai')
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.stargazers_count) animateCounter('github-stars', data.stargazers_count);
-                    if (data.forks_count) animateCounter('github-forks', data.forks_count);
-                })
-                .catch(error => {
-                    console.error('Error fetching GitHub stats:', error);
-                    // Fallback values
-                    document.getElementById('github-stars').textContent = '1,200+';
-                    document.getElementById('github-forks').textContent = '350+';
-                });
-
-            function animateCounter(elementId, target) {
-                const element = document.getElementById(elementId);
-                if (!element) return;
-                const duration = 2000;
-                const start = 0;
-                const increment = target / (duration / 16);
-
-                let current = start;
-                const timer = setInterval(() => {
-                    current += increment;
-                    if (current >= target) {
-                        clearInterval(timer);
-                        element.textContent = target.toLocaleString();
-                    } else {
-                        element.textContent = Math.floor(current).toLocaleString();
-                    }
-                }, 16);
-            }
+        }, {
+            threshold: 0.2,
+            rootMargin: '0px 0px -40px 0px'
         });
+
+        document.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
+        document.getElementById('year').textContent = new Date().getFullYear();
     </script>
 </body>
 </html>

@@ -12,6 +12,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive issue and PR templates
 - Version bump automation
 
+## [0.3.0] - 2025-02-15
+
+### 🎨 UI/UX Enhancements
+- **Unified Creation Dashboard**: Redesigned home experience with quick-start actions and progress tracking
+- **Guided Episode Timeline**: Visual stepper for scraping, scripting, voicing, and publishing stages
+- **Adaptive Theme System**: Automatically harmonizes accent colors with generated cover art and user preferences
+
+### 🚀 New Features
+- **Project Workspaces**: Organize scripts, cover art, and audio assets into collaborative collections
+- **Episode Insights**: Surfaced metrics for generation duration, token usage, and playback engagement
+- **Collaboration Links**: Share read-only snapshots of projects with stakeholders for review sessions
+
+### 🔧 Improvements
+- **Release Health Checks**: Inline warnings for missing API keys, quota limits, or storage constraints before rendering
+- **Performance Boosts**: Faster navigation, smoother scrolling, and optimized caching during provider switching
+- **Reliability**: Hardened error handling across scraping, scripting, and TTS pipelines
+
 ## [0.2.0] - 2025-01-20
 
 ### 🎨 Major UI/UX Improvements
@@ -154,5 +171,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Patch** (0.0.X): Bug fixes, small improvements
 
 ### Links
-- [Unreleased]: https://github.com/Mr-Dark-debug/EchoGen.ai/compare/v1.0.0...HEAD
+- [Unreleased]: https://github.com/Mr-Dark-debug/EchoGen.ai/compare/v0.3.0...HEAD
+- [0.3.0]: https://github.com/Mr-Dark-debug/EchoGen.ai/releases/tag/v0.3.0
+- [0.2.0]: https://github.com/Mr-Dark-debug/EchoGen.ai/releases/tag/v0.2.0
 - [1.0.0]: https://github.com/Mr-Dark-debug/EchoGen.ai/releases/tag/v1.0.0
+- [0.1.0]: https://github.com/Mr-Dark-debug/EchoGen.ai/releases/tag/v0.1.0
