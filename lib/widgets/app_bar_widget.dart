@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:echogenai/constants/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EchoGenAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
@@ -101,8 +102,8 @@ class EchoGenAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ? AppTheme.textPrimaryDark
                     : AppTheme.textPrimary,
               ),
-              onPressed: () {
-                _launchGitHub(context);
+              onPressed: () async {
+                await _launchGitHub(context);
               },
               tooltip: 'View on GitHub',
             ),
@@ -148,45 +149,22 @@ class EchoGenAppBar extends StatelessWidget implements PreferredSizeWidget {
     }
   }
 
-  void _launchGitHub(BuildContext context) {
-    // For now, show a snackbar with the GitHub URL
-    // TODO: Replace with actual URL launcher when package is added
+  Future<void> _launchGitHub(BuildContext context) async {
     const githubUrl = 'https://github.com/Mr-Dark-debug/EchoGen.ai';
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.open_in_new, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Opening GitHub: $githubUrl',
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: AppTheme.primaryBlue,
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
+    await _launchExternalUrl(
+      context,
+      githubUrl,
+      linkLabel: 'GitHub repository',
     );
-
-    // TODO: Uncomment when url_launcher is added
-    // await launchUrl(Uri.parse(githubUrl));
   }
 
-  void _showSponsorDialog(BuildContext context) {
-    final theme = Theme.of(context);
+  void _showSponsorDialog(BuildContext parentContext) {
+    final theme = Theme.of(parentContext);
     final isDarkMode = theme.brightness == Brightness.dark;
 
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
+      context: parentContext,
+      builder: (BuildContext dialogContext) {
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -233,25 +211,25 @@ class EchoGenAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 const SizedBox(height: 24),
                 _buildSponsorOption(
-                  context,
+                  dialogContext,
                   '☕ Buy me a coffee',
                   'Support with a small donation',
-                  () => _launchSponsorUrl(context, 'buymeacoffee'),
+                  () async => _launchSponsorUrl(parentContext, 'buymeacoffee'),
                   svgIcon: 'lib/assets/icons/bmc.svg',
                 ),
                 const SizedBox(height: 12),
                 _buildSponsorOption(
-                  context,
+                  dialogContext,
                   '💖 GitHub Sponsors',
                   'Become a monthly sponsor',
-                  () => _launchSponsorUrl(context, 'github'),
+                  () async => _launchSponsorUrl(parentContext, 'github'),
                 ),
                 const SizedBox(height: 12),
                 _buildSponsorOption(
-                  context,
+                  dialogContext,
                   '🎯 Patreon',
                   'Join our community',
-                  () => _launchSponsorUrl(context, 'patreon'),
+                  () async => _launchSponsorUrl(parentContext, 'patreon'),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -266,7 +244,7 @@ class EchoGenAppBar extends StatelessWidget implements PreferredSizeWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () => Navigator.of(dialogContext).pop(),
                           style: TextButton.styleFrom(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -302,9 +280,9 @@ class EchoGenAppBar extends StatelessWidget implements PreferredSizeWidget {
                           ],
                         ),
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            _launchSponsorUrl(context, 'buymeacoffee');
+                          onPressed: () async {
+                            Navigator.of(dialogContext).pop();
+                            await _launchSponsorUrl(parentContext, 'buymeacoffee');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
@@ -428,9 +406,7 @@ class EchoGenAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  void _launchSponsorUrl(BuildContext context, String platform) {
-    // TODO: Add url_launcher package and implement
-    // For now, show a snackbar with the URL
+  Future<void> _launchSponsorUrl(BuildContext context, String platform) async {
     String url;
     switch (platform) {
       case 'buymeacoffee':
@@ -446,11 +422,51 @@ class EchoGenAppBar extends StatelessWidget implements PreferredSizeWidget {
         url = 'https://github.com/Mr-Dark-debug/EchoGen.ai';
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening: $url'),
-        duration: const Duration(seconds: 3),
-      ),
+    await _launchExternalUrl(
+      context,
+      url,
+      linkLabel: platform,
     );
+  }
+
+  Future<void> _launchExternalUrl(
+    BuildContext context,
+    String url, {
+    String? linkLabel,
+  }) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        final didLaunch = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (!didLaunch && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open ${linkLabel ?? 'link'}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not launch ${linkLabel ?? url}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening ${linkLabel ?? 'link'}: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
