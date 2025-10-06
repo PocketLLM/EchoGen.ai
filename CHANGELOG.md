@@ -12,6 +12,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive issue and PR templates
 - Version bump automation
 
+## [0.2.1] - 2025-02-15
+
+### 🎨 UI/UX Enhancements
+- **Android Studio Revamp**: Focused journey view highlights progress for research, scripting, voicing, and publishing.
+- **Glassmorphic Polish**: Gradient surfaces, depth lighting, and typography refinements align with the refreshed brand system.
+- **Creator Metrics**: Beta feedback ratings and render insights appear inline within the creation dashboard.
+
+### 🚀 Feature Updates
+- **Tone Guardrails**: Script intelligence separates emotional cues from spoken dialogue to keep narration natural.
+- **Voice Twin Tuning**: Smarter blending trims silence, smooths transitions, and balances speaker levels.
+- **Cover Art Palettes**: Curated presets accelerate artwork generation while keeping episodes on-brand.
+- **Offline-first Cache**: Background sync extends asset availability when creators are offline.
+
+### 🔧 Improvements
+- **Release Health Checks**: Inline warnings validate API keys, storage, and quota limits prior to rendering.
+- **Performance Boosts**: Faster navigation and optimized caching across providers reduce creation time.
+- **Reliability**: Hardened error handling throughout scraping, scripting, and TTS pipelines.
+
 ## [0.2.0] - 2025-01-20
 
 ### 🎨 Major UI/UX Improvements
@@ -154,5 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Patch** (0.0.X): Bug fixes, small improvements
 
 ### Links
-- [Unreleased]: https://github.com/Mr-Dark-debug/EchoGen.ai/compare/v1.0.0...HEAD
-- [1.0.0]: https://github.com/Mr-Dark-debug/EchoGen.ai/releases/tag/v1.0.0
+- [Unreleased]: https://github.com/Mr-Dark-debug/EchoGen.ai/compare/v0.2.1...HEAD
+- [0.2.1]: https://github.com/Mr-Dark-debug/EchoGen.ai/releases/tag/v0.2.1
+- [0.2.0]: https://github.com/Mr-Dark-debug/EchoGen.ai/releases/tag/v0.2.0
+- [0.1.0]: https://github.com/Mr-Dark-debug/EchoGen.ai/releases/tag/v0.1.0

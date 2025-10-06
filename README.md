@@ -12,7 +12,7 @@
   [![GitHub Stars](https://img.shields.io/github/stars/Mr-Dark-debug/EchoGen.ai?style=social)](https://github.com/Mr-Dark-debug/EchoGen.ai/stargazers)
   [![GitHub Release](https://img.shields.io/github/v/release/Mr-Dark-debug/EchoGen.ai?style=flat&logo=github)](https://github.com/Mr-Dark-debug/EchoGen.ai/releases/latest)
   
-  [🚀 Features](#-features) • [📱 Screenshots](#-screenshots) • [🛠️ Installation](#️-installation) • [🔧 Configuration](#-configuration) • [🌐 Landing Page](#-landing-page) • [🤝 Contributing](#-contributing)
+  [🚀 Features](#-features) • [🛣️ Upcoming Features](#-upcoming-features) • [📱 Screenshots](#-screenshots) • [🛠️ Installation](#️-installation) • [🔧 Configuration](#-configuration) • [🌐 Landing Page](#-landing-page) • [🤝 Contributing](#-contributing)
 </div>
 
 ---
@@ -21,22 +21,28 @@
 
 EchoGen.ai is a powerful, open-source Flutter application that transforms any web content or text into engaging, multi-speaker AI-generated podcasts. Whether you're a content creator, educator, or just someone who loves podcasts, EchoGen.ai makes it easy to convert articles, blog posts, or custom scripts into professional-quality audio content.
 
-### 🌟 Why EchoGen.ai v0.2.0?
+### 🌟 Why EchoGen.ai v0.2.1?
 
-- **🎵 Background Audio Playback**: Full background audio with notification controls and mini player
-- **🎨 AI Cover Art Generation**: Create stunning cover art using ImageRouter AI
-- **📝 Smart Script Chunking**: Handle long scripts with intelligent chunking to avoid timeouts
-- **🔑 Centralized API Management**: Secure management of all API keys in one location
-- **🎯 Enhanced Content Processing**: Convert any URL or text with improved error handling
-- **🤖 Multiple AI Providers**: Gemini, OpenAI, ElevenLabs, and ImageRouter support
-- **🎭 Multi-Speaker Conversations**: Natural conversations between AI speakers
-- **🎨 Modern UI/UX**: Improved loading messages, better error handling, dark/light themes
-- **📱 Cross-Platform**: Works on Android, iOS, and desktop
-- **🆓 Open Source**: Completely free and open for contributions
+- **📱 Android-first studio**: The entire creation journey is tuned for mobile with tactile controls and fast navigation.
+- **🛣️ Guided creation timeline**: Move from research to publishing with contextual prompts and confidence checks.
+- **🎙️ Voice twin engine**: Blend expressive, multi-speaker narration while keeping emotional cues out of your script copy.
+- **🎨 Cinematic cover art**: Generate on-brand visuals with curated palettes and instant refinements.
+- **⚡ Speed & stability**: Smarter caching, quicker renders, and resilient error recovery keep production flowing.
+- **🛡️ Release safeguards**: Inline health checks verify API keys, storage, and quota limits before you press publish.
+- **🆓 Open Source**: Completely free and open for contributions.
 
 ## ✨ Features
 
-### 🆕 New in v0.2.0
+### 🆕 New in v0.2.1
+
+- **✨ Android home revamp**: Focus views keep research, scripting, and publishing milestones crystal clear on small screens.
+- **🧠 Tone guardrails**: Script intelligence separates emotion cues from spoken dialogue to keep narration natural.
+- **🎚️ Voice twin tuning**: Improved blending removes abrupt cuts and trims silence automatically.
+- **🎨 Cover art palettes**: Curated model presets speed up ideation while staying on-brand.
+- **☁️ Offline-first caching**: Larger episode assets sync in the background so you can keep creating on the go.
+- **🛡️ Preflight checklist**: Health checks surface missing API keys, low storage, and quota warnings before rendering.
+
+### ✨ Previously in v0.2.0
 
 - **🎵 Background Audio Playback**: Full background audio service with notification controls
 - **🎮 Mini Player**: Floating mini player with spinning logo animation across all screens
@@ -65,14 +71,14 @@ EchoGen.ai is a powerful, open-source Flutter application that transforms any we
 - **Emotion Guidance**: Advanced tone control for natural-sounding dialogue
 - **Speed Control**: Variable playback speeds (0.25x to 2.0x)
 
-### 🖼️ AI-Powered Cover Art Generation ✨ NEW in v0.2.0
+### 🖼️ AI-Powered Cover Art Generation ✨ Introduced in v0.2.0
 - **ImageRouter Integration**: Generate custom podcast cover art using AI
 - **Multiple AI Models**: Support for DALL-E 3, Stable Diffusion XL, Midjourney
 - **Quality Options**: Choose from auto, low, medium, and high quality
 - **Size Options**: Multiple aspect ratios for different platforms
 - **Local Storage**: Generated covers saved locally for offline access
 
-### 🎨 Enhanced Player Experience ✨ NEW in v0.2.0
+### 🎨 Enhanced Player Experience ✨ Introduced in v0.2.0
 - **Spinning Logo Animation**: Visual feedback during playback
 - **Transcript Slide View**: Swipe to access full transcript with mini player
 - **Horizontal Speed Control**: Expanded speed options with visual selection
@@ -92,6 +98,14 @@ EchoGen.ai is a powerful, open-source Flutter application that transforms any we
 - **Dark/Light Themes**: Comfortable viewing in any environment
 - **Responsive Design**: Optimized for all screen sizes
 - **Smooth Animations**: Polished interactions and transitions
+
+## 🛣️ Upcoming Features
+
+- **Live Collaboration**: Real-time co-editing of scripts, cover prompts, and publishing notes
+- **Voice Marketplace**: Curated library of expressive voices sourced from community partners
+- **Automated Distribution**: One-click syndication to Spotify, Apple Podcasts, and RSS feeds
+- **Interactive Chapters**: Dynamic chapter markers with shareable highlights and key takeaways
+- **Accessibility Studio**: Auto-captioning, transcript export, and audio leveling for inclusive listening
 
 ## 📱 Screenshots
 
@@ -407,19 +421,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🚀 Roadmap
 
-### Upcoming Features
-- **🌍 Multi-language Support**: Generate podcasts in multiple languages
-- **🎵 Background Music**: Add ambient music to podcasts
-- **📊 Analytics**: Track podcast performance and engagement
-- **☁️ Cloud Sync**: Optional cloud backup for your content
-- **🎨 Custom Themes**: More theme options and customization
-- **🔊 Voice Cloning**: Clone your own voice for personalized podcasts
-- **📱 Mobile Widgets**: Quick access widgets for mobile devices
-- **🎬 Video Podcasts**: Generate video content with AI avatars
+### ✅ Latest Release
+- **v0.2.1**: Android-first studio polish, tone guardrails, voice twin tuning, cover art palettes, and offline-first caching boosts
+
+### 🛠️ In Progress
+- **Live Collaboration**: Multiplayer editing with inline comments and suggestions
+- **Voice Marketplace**: Curated voice packs, marketplace submissions, and licensing controls
+- **Automated Distribution**: Publish directly to major podcast networks and custom RSS feeds
+
+### 🔮 On the Horizon
+- **Interactive Chapters**: Audience-ready chapter markers, polls, and highlight reels
+- **Accessibility Studio**: Auto-captioning, loudness normalization, and transcript export suites
+- **Immersive Video Mode**: Optional video layers, AI avatars, and audiogram templates
 
 ### Version History
-- **v0.1.0**: Initial release with core features
+- **v0.2.1**: Android studio revamp, tone guardrails, voice twin tuning, cover art palettes, offline-first caching
 - **v0.2.0**: Background audio playback, AI cover art generation, smart script chunking, centralized API management, enhanced UI/UX
+- **v0.1.0**: Initial release with core features
 
 ## 🔧 Troubleshooting
 
