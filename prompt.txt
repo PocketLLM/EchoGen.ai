@@ -1,0 +1,874 @@
+Below is your final master prompt.
+Send this to the AI that will build the project.
+
+Do not modify it.
+
+
+---
+
+MASTER BUILD PROMPT
+
+You are tasked with designing and implementing a production-ready, cross-platform, local-first peer-to-peer chat application named:
+
+Ephemeral
+
+Ephemeral is a terminal-first, zero-account, no-server, no-history LAN chat system written entirely in Go.
+
+This is not a prototype. This must be production-grade, modular, well-documented, fully tested, and release-ready.
+
+You must perform web research first before making architectural decisions.
+
+You must verify latest library versions, security practices, networking patterns, and cross-compilation methods.
+
+You must not assume outdated knowledge.
+
+You must test everything and inspect logs before delivering final code.
+
+You must stop and fix any failing behavior before submission.
+
+Only submit when the system is stable, tested, and production-ready.
+
+
+---
+
+PROJECT VISION
+
+Ephemeral is:
+
+• Local-first
+• Same-LAN only (no internet required)
+• No central server
+• No accounts
+• No telemetry
+• No tracking
+• No persistent chat history by default
+• Fully open-source
+• Single static binary distribution
+• Works on Linux, macOS, Windows, and Android (Termux)
+
+Users on the same Wi-Fi network run:
+
+ephemeral --nick alice
+ephemeral --nick bob
+
+They automatically discover each other. They join a default global room. They chat instantly. No setup. No signup. No database.
+
+
+---
+
+CORE REQUIREMENTS
+
+You must implement:
+
+1. Language
+
+Go only.
+
+Idiomatic, modular, clean architecture. No global state. Dependency injection where appropriate. Interfaces for testability.
+
+
+---
+
+2. Discovery Layer
+
+Primary: mDNS / DNS-SD (zeroconf)
+
+Research and select the best maintained Go library (evaluate grandcat/zeroconf and alternatives).
+
+Advertise service:
+
+_service._ephemeral._tcp
+
+Use TXT records for:
+
+nick
+
+version
+
+features
+
+port
+
+
+Peers auto-discover within 10 seconds.
+
+Fallback: UDP broadcast discovery for networks where multicast is blocked.
+
+You must research current best practices and cite sources.
+
+
+---
+
+3. Transport Layer
+
+TCP-based persistent peer connections.
+
+Requirements:
+
+• Long-lived connections
+• Safe read/write loops
+• Backpressure-safe message queue
+• Automatic reconnect
+• Graceful disconnect handling
+• No blocking goroutines
+• Context cancellation support
+
+Message framing: JSON Lines (one JSON object per newline)
+
+Max message size: 4096 bytes
+
+Message envelope:
+
+{
+  "v": 1,
+  "id": "<uuid-v4>",
+  "from": "<peer-id>",
+  "nick": "<display-name>",
+  "room": "global",
+  "ts": unix_timestamp,
+  "type": "chat | presence | control | ack",
+  "payload": "<string or base64 encrypted>",
+  "sig": "<optional-hmac>"
+}
+
+Must include replay protection using in-memory ID cache.
+
+
+---
+
+4. Room System
+
+Default room: global
+
+Commands:
+
+/join <room> [passphrase]
+/leave <room>
+/nick <newname>
+/peers
+/quit
+
+Rooms are logical only. No server coordination.
+
+All state in memory only.
+
+
+---
+
+5. Encryption
+
+Optional room-level encryption.
+
+If user joins room with passphrase:
+
+/join secretroom mypassword
+
+You must:
+
+• Derive key using HKDF-SHA256
+• Use AES-256-GCM for encryption
+• Implement HMAC-SHA256 for authenticity (optional toggle)
+• Implement replay protection
+• Never persist keys to disk unless explicitly enabled
+
+Document threat model.
+
+
+---
+
+6. Terminal UI
+
+Use Bubble Tea + Lip Gloss (latest versions, verified via research).
+
+Layout:
+
+Top: App name, version, current room, peer count
+
+Left panel: Peer list
+
+Center: Chat feed
+
+Bottom: Input field
+
+Nice styling. Dark mode friendly. Keyboard shortcuts: Ctrl-K focus input Ctrl-L clear Ctrl-P toggle peers Ctrl-H help
+
+Headless mode must exist.
+
+
+---
+
+7. Optional Web UI
+
+Embedded lightweight web UI (optional feature toggle).
+
+Expose:
+
+• Current peers • Room list • Settings • Logs (ephemeral only) • Encryption toggle
+
+Must not require external server.
+
+
+---
+
+8. Configuration
+
+YAML-based config.
+
+Example:
+
+nick: "ephemeral"
+port: 9999
+
+discovery:
+  mdns: true
+  udp_fallback: true
+
+rooms:
+  - name: global
+    encrypted: false
+
+security:
+  persist_keys: false
+
+logging:
+  level: info
+  ephemeral_logs: true
+
+
+---
+
+9. Privacy Requirements
+
+• No chat history saved by default
+• No telemetry
+• No analytics
+• No external connections
+• Explicit privacy notice on first run
+• Data wipe command
+
+
+---
+
+10. Performance Requirements
+
+Under 10 peers: Message latency under 2 seconds.
+
+Must pass stress test: 100 messages/sec for 30 seconds without crashing.
+
+Document scaling limits.
+
+
+---
+
+11. Testing Requirements
+
+You must implement:
+
+Unit tests: • Protocol serialization • Crypto functions • Discovery mock tests • Transport layer
+
+Integration tests: • Two peers exchange messages • Multi-peer broadcast (>=8 peers) • Encryption works correctly • Disconnect/reconnect handling
+
+Manual test documentation: Linux + macOS + Windows Linux + Termux Android
+
+You must show test output logs.
+
+Do not skip tests.
+
+If tests fail, fix before submission.
+
+
+---
+
+12. CI / Release
+
+You must:
+
+• Create GitHub Actions workflow • Run tests automatically • Cross-compile for:
+
+linux/amd64
+linux/arm64
+darwin/amd64
+windows/amd64
+android/arm64
+
+• Provide goreleaser config • Generate checksums
+
+
+---
+
+13. Repository Structure
+
+Provide full project scaffold:
+
+cmd/
+internal/
+  discovery/
+  transport/
+  room/
+  crypto/
+  protocol/
+  tui/
+  config/
+web/
+scripts/
+ci/
+docs/
+README.md
+LICENSE
+
+Include:
+
+design.md
+protocol.md
+security.md
+usage.md
+
+All documented.
+
+
+---
+
+14. Documentation
+
+README must include:
+
+• One-line install • Run instructions • Termux instructions • Privacy statement • Security notes • Demo script • Troubleshooting section
+
+
+---
+
+15. Web Research Requirements
+
+Before coding:
+
+You must research and provide:
+
+• Latest Go versions • Latest Bubble Tea + Lip Gloss versions • mDNS Go library comparison • UDP broadcast pitfalls • AES-GCM best practices in Go • HKDF implementation references • Go cross-compilation best practices • Termux Go binary notes
+
+Provide annotated bibliography of at least 10 sources.
+
+Cite them in design decisions.
+
+
+---
+
+16. Implementation Rules
+
+• Modular • Clean interfaces • Small reusable files • No monolithic code • No hidden side effects • No silent failures • Structured logging • Context-aware goroutines • Graceful shutdown • Timeouts everywhere • Panic recovery
+
+
+---
+
+17. Validation Requirements
+
+Before final submission:
+
+You must:
+
+1. Run all tests
+
+
+2. Inspect logs
+
+
+3. Simulate peer crashes
+
+
+4. Verify encryption works
+
+
+5. Verify no data persists after exit
+
+
+6. Verify cross-compilation works
+
+
+7. Verify Termux compatibility
+
+
+8. Confirm no race conditions (run with -race)
+
+
+
+If any failure occurs: Fix it. Retest. Do not submit unstable code.
+
+Only submit when everything is production-ready.
+
+
+---
+
+18. Final Deliverables
+
+You must output:
+
+1. Annotated bibliography
+
+
+2. Design documentation
+
+
+3. Full repository content
+
+
+4. Test output logs
+
+
+5. CI config
+
+
+6. Release build instructions
+
+
+7. Known limitations
+
+
+8. Demo script
+
+
+9. Final confirmation that:
+
+Tests passed
+
+Logs clean
+
+No runtime crashes
+
+No race conditions
+
+
+
+
+If you cannot verify production readiness, do not deliver partial code.
+
+
+---
+
+Begin by performing web research and providing annotated bibliography.
+
+Then implement the full project.
+
+Do not skip testing.
+
+Do not cut corners.
+
+Stop only when Ephemeral is stable, tested, and ready for release.
+
+Nice. You want a build brief and a single, exhaustive prompt an AI can run with to research, design, test, and implement a cross-platform, local-LAN, zero-history, terminal-first P2P chat in Go (no Bluetooth). Below is everything — architecture, protocols, design decisions with sources, module map, QA plan, packaging & CI, config schemas, UX/TUI spec, security model, compatibility matrix, and then a ready-to-run prompt for another AI to execute (force it to websearch first). Use this prompt as-is. No code here, just the spec your builder-AI must follow.
+
+Project name
+
+meshroom (short, memorable, implies local rooms and mesh behavior). Alternative: roomless or lan-room.
+
+One-line vision
+
+Ephemeral, zero-account local LAN chat: discover peers via mDNS, exchange encrypted messages over TCP, present a polished terminal UI (Bubble Tea + Lip Gloss), run as a single static Go binary on Linux, macOS, Windows and Termux (Android). No persistence, no telemetry, no login.
+
+Key high-level decisions (summary + justification)
+
+Language: Go — static single binaries, excellent concurrency, easy cross-compilation, minimal runtime dependencies. 
+
+Discovery: mDNS / DNS-SD (zeroconf) as primary discovery layer (robust, less hacky than raw UDP broadcast and works across many home networks). Use grandcat/zeroconf. 
+
+Transport: TCP connections for message streams (reliable, ordered). Use a lightweight framing protocol (JSON lines or MessagePack) and optional WebSocket fallback for browser clients. Consider Gorilla WebSocket for any WebSocket gateway. 
+
+UI: Terminal-first using Bubble Tea + Lip Gloss for a clean, reactive, cross-platform TUI. Provide a minimal Web UI (optional) for users who prefer graphical setup. 
+
+Discovery fallback: UDP broadcast fallback for headless/hacky networks and to bootstrap mDNS if needed. Document tradeoffs. 
+
+
+Core non-functional constraints
+
+Zero on-disk chat history by default (in-memory only). Optional ephemeral log for troubleshooting (rotated, encrypted, user can wipe).
+
+Tracker-free: no third-party telemetry; open-source license (MIT or BSD) by default.
+
+Privacy-first defaults: encryption disabled only if user chooses plain LAN; recommend encrypted rooms by default.
+
+Small binary footprint, minimal external deps, CI builds for major OS/ARCH.
+
+Robust NAT/router behaviour not required; target same-LAN only (no NAT traversal) for v1.
+
+
+Architecture overview (modules and responsibilities)
+
+Provide to builder-AI as a file-tree and detailed module responsibilities.
+
+meshroom/
+├── cmd/
+│   ├── meshroomd/        # main daemon / TUI entrypoint
+│   └── meshroomctl/      # CLI utilities (peer info, join, leave, status)
+├── internal/
+│   ├── discovery/        # mDNS (zeroconf) + UDP fallback
+│   ├── transport/        # TCP acceptor, peer connection manager, message framing
+│   ├── room/             # room manager, in-memory state, ephemeral user lists
+│   ├── crypto/           # room key derivation, AES-GCM helpers, handshake
+│   ├── protocol/         # message schemas, framing, serialization
+│   ├── tui/              # Bubble Tea UI components
+│   ├── config/           # config loader, runtime flags, YAML schema
+│   └── tests/            # internal integration / unit test helpers
+├── web/                  # optional small web UI (FastCGI or embedded web server)
+├── scripts/
+│   ├── build.sh          # cross-compile helper
+│   └── release.sh
+├── ci/
+│   └── github-actions.yml
+├── docs/
+│   ├── design.md
+│   ├── security.md
+│   └── usage.md
+├── examples/             # example start scripts, systemd unit, termux notes
+└── README.md
+
+Protocol & wire format (concrete spec your builder must implement)
+
+Use JSON-lines (one JSON object per newline) or MessagePack for smaller payloads. Default: JSON-lines for readability; add MessagePack toggle for production.
+
+Message envelope fields (minimum):
+
+
+{
+  "v": 1,
+  "id": "<uuid-v4>",
+  "from": "<peer-id>",
+  "nick": "<display-name>",
+  "room": "global",
+  "ts": 1670000000,
+  "type": "chat",         // chat | presence | control | ack
+  "payload": "<string>",  // or encrypted binary base64
+  "sig": "<optional-sig>" // later for authenticity
+}
+
+Keep messages ≤ 4096 bytes by default; clients must truncate larger texts or send multi-part messages with client-side reassembly.
+
+
+Discovery handshake & peer metadata
+
+Advertise service via mDNS: service type _meshroom._tcp, TXT records: nick=, ver=, features=, port=. Use zeroconf for registration and browsing. 
+
+Fallback discovery: send a UDP broadcast discovery packet on local subnets containing a minimal JSON: {“cmd”:“DISCOVER”, “nick”:..., “port”:...}. Responders open TCP with advertised port. Document multicast vs broadcast tradeoffs. 
+
+
+Connection model
+
+On peer discovery, open a long-lived TCP connection to the peer’s advertised port.
+
+Use per-connection read loop + write queue with backpressure.
+
+Maintain per-peer state: last seen timestamp (TTL), connection direction, negotiated room key (if encrypted).
+
+Broadcast model for global room: either (a) flood messages to all connected peers, or (b) maintain a partial mesh and forward messages (flooding simplest). Start with flooding; document pros/cons. See P2P design notes. 
+
+
+Encryption & security model
+
+Default: rooms support optional symmetric encryption.
+
+Room key derivation: user supplies a passphrase for the room (e.g., /join global default no-pass; /join secureroom hunter2), derive AES-256-GCM key using HKDF(SHA-256) over the passphrase and an application salt. Provide command to rotate keys.
+
+Implement replay protection using message id and short TTL cache (in-memory only).
+
+Optional per-message authenticity: HMAC-SHA256 over canonical envelope using peer pre-shared key or derived key.
+
+Never persist keys to disk unless user explicitly opts in (and then encrypted with user passphrase and stored in config dir).
+
+Document attack vectors and mitigation in docs/security.md.
+
+
+UI / UX spec (terminal-first)
+
+TUI built with Bubble Tea + Lip Gloss. Design must be modular components.
+
+Screens / panes:
+
+Top bar: app name, version, current room, peer count.
+
+Left column: peer list (online status, nick, ping).
+
+Center column: messages (slim, with colors for nick).
+
+Bottom: input field with slash commands (/join, /leave, /nick, /rooms, /encrypt on/off, /invite ip:port, /quit).
+
+Popups: settings, help, join room prompt, password prompt.
+
+Keyboard shortcuts: Ctrl-K jump to input, Ctrl-P open peer list, Ctrl-L clear screen.
+
+Theme: dark default; support terminal color schemes. 
+
+
+TUI must expose a programmatic API so a headless run mode (no TUI) can be used for daemons.
+
+CLI commands
+
+meshroomd --nick prashant --port 9999 start daemon (TUI unless --headless).
+
+meshroomctl status show peers, rooms.
+
+meshroomctl send --room global --message "hi" scriptable send.
+
+meshroomd --loglevel debug --wipe-on-exit dev flags.
+
+
+Config schema (YAML)
+
+Example entries builder-AI must produce:
+
+nick: "meshroom"
+port: 9999
+rooms:
+  - name: global
+    encrypted: false
+discovery:
+  mdns: true
+  udp_fallback: true
+ui:
+  tui: true
+  web: false
+security:
+  persist_keys: false
+  key_rotation_days: 7
+rate_limits:
+  per_peer_seconds: 2
+  per_room_messages_per_minute: 120
+logging:
+  level: info
+  ephemeral_logs: true
+
+Tests and QA plan (must be included)
+
+The AI must implement and run tests:
+
+Unit tests:
+
+Serialization/deserialization of protocol envelopes.
+
+Crypto primitives: key derivation, AES-GCM encrypt/decrypt roundtrips.
+
+Discovery: mock mDNS + UDP responder tests.
+
+Transport: mock two peers connect and exchange framed messages.
+
+
+Integration tests:
+
+Two processes on localhost simulate peer discovery + chat exchange.
+
+Mesh reliability test: start N peers (N≥8) and ensure broadcast delivered to all peers within X seconds.
+
+Stress test: 100 messages per second for 30s to detect backpressure.
+
+Failure tests: peer disconnect reconnect, message duplicates, partial writes.
+
+
+Manual tests:
+
+Run on Linux laptop + Termux phone + mac – confirm cross-platform discovery and message flow.
+
+
+CI:
+
+GitHub Actions matrix build for linux/amd64, linux/arm64, darwin/amd64, windows/amd64, and android/arm64 cross-compile artifacts. Use goreleaser or custom scripts for multi-arch builds. 
+
+
+Packaging & distribution
+
+Use Go modules. Provide make build and scripts/build.sh wrapper.
+
+Provide prebuilt binaries via GitHub Releases (use goreleaser).
+
+Provide Termux notes: building on Termux vs distributing static binary; document Termux-specific capabilities and limitations. 
+
+
+Compatibility & limits
+
+Target OS: Linux, macOS, Windows. Provide Termux (Android) notes. Cross-compile for linux/arm64 for most phones. 
+
+Network: same-LAN only (no NAT traversal / internet relay for v1). Document possible future ICE/STUN plan but keep out of scope.
+
+
+Privacy & policy notes (deliver to builder)
+
+Must include clear user-visible privacy notice on first-run: ephemeral by default, no telemetry, encryption options, how to wipe data.
+
+Include explicit consent flow if any optional telemetry or crash reporting is ever added (for later).
+
+License: pick permissive (MIT) unless project needs stronger copyleft.
+
+
+Observability & troubleshooting
+
+Provide --log-level debug and ephemeral in-memory ring buffer logs accessible in TUI.
+
+Provide dump-state command for debugging (wipes on next run unless saved by user).
+
+Provide wipe command to securely zero keys and clear in-memory logs.
+
+
+Deliverables expected from the builder-AI (explicit)
+
+1. Full repository scaffold matching file-tree above.
+
+
+2. Well-documented design.md and security.md.
+
+
+3. Production-ready, idiomatic Go code implementing discovery, transport, room manager, crypto, TUI components (Bubble Tea), CLI. All code must be modular, testable, and use interface-driven design for easy mocking.
+
+
+4. Unit tests and integration tests with documented test scripts.
+
+
+5. CI pipeline (GitHub Actions) that cross-compiles and runs unit tests.
+
+
+6. scripts/build.sh and release.sh for cross-compile and packaging via goreleaser.
+
+
+7. README.md with one-line install, examples for Linux/macOS/Windows/Termux, permissions and troubleshooting.
+
+
+8. Example systemd unit and Termux run instructions.
+
+
+9. Release artifacts: binaries for main OS/ARCH combos and checksums.
+
+
+10. A short demo plan (3-step demo script to show discovery, messaging, encrypted room).
+
+
+
+Acceptance criteria (how you’ll know the builder succeeded)
+
+A person on a laptop and another on an Android Termux phone run meshroom and see each other in peer list within 10s on same Wi-Fi.
+
+A message sent by one peer appears on the other peer’s terminal within 2s under normal LAN conditions (local network).
+
+Encrypted room using user passphrase successfully decrypts on peers who used same passphrase.
+
+No chat history on disk after default-run and --wipe removes keys/logs.
+
+CI produces cross-compiled binaries and release artifacts.
+
+
+Security checklist (must be in docs/security.md)
+
+AES-256-GCM for encryption.
+
+HKDF-SHA256 for key derivation.
+
+HMAC-SHA256 for optional authenticity.
+
+Replay protection via short-lived in-memory ID cache.
+
+Rate limiting and per-peer throttling.
+
+Safe defaults: encrypted room recommended; store nothing to disk by default.
+
+Document key-rotation and secure wipe.
+
+
+Performance & scaling notes
+
+Mesh flooding is simple but O(N^2) bandwidth for large N; document this and provide a future plan: partial overlay, gossip protocol, or selective forwarding. Reference P2P literature. 
+
+
+UX examples (slash commands)
+
+/join roomname [passphrase]
+
+/leave roomname
+
+/nick newnick
+
+/peers
+
+/invite ip:port (manual connect)
+
+/encrypt on|off (toggle room-level encryption)
+
+/quit
+
+
+Helpful libraries and references the builder must evaluate (must websearch and cite latest)
+
+grandcat/zeroconf — mDNS service discovery. 
+
+charmbracelet/bubbletea + lipgloss — TUI framework and style. 
+
+gorilla/websocket — if adding WebSocket gateway. 
+
+UDP broadcast patterns and pitfalls (for fallback discovery). 
+
+Cross-compile and release guidance for Go (goreleaser / GitHub Actions). 
+
+
+Now: the exact prompt to give another AI (force it to websearch first)
+
+Use this exact prompt. It instructs the target AI to do web searches, gather latest library versions and best practices, and then produce the repository, tests, CI, and release artifacts. The AI must return a prioritized implementation plan first, then code + tests + CI + release artifacts. The AI must not assume any out-of-date knowledge; it must show the top 10 web sources it used and cite them in its output.
+
+Task: Build "meshroom" — an ephemeral, local-first, no-account LAN chat application in Go, terminal-first (Bubble Tea) with optional web UI, mDNS discovery, TCP transport, and optional room encryption. You will research and implement everything, run tests, and produce release artifacts.
+
+Phase 0 — Research (MANDATORY)
+1. Do a web search for the latest, high-quality docs, libraries, and best-practices for:
+   - mDNS/ZeroConf libraries in Go (evaluate grandcat/zeroconf and alternatives).
+   - Terminal UI libraries in Go (Bubble Tea + Lip Gloss).
+   - WebSocket libraries for Go.
+   - UDP broadcast vs mDNS tradeoffs (latest pros/cons).
+   - Cross-compilation & packaging strategies for Go (goreleaser, GitHub Actions).
+   - AES-GCM and HKDF usage patterns in Go.
+   - Termux / Android notes for running Go binaries.
+2. Produce a short annotated bibliography of at least 10 high-quality sources (docs, libraries, blogs, benchmarks) with URLs and one-sentence summary for each.
+
+Phase 1 — Design & Documentation
+3. Produce `design.md` explaining architecture, discovery, transport, room semantics, encryption model, UX flows, and scalability tradeoffs. Include sequence diagrams for discovery and message flow.
+4. Produce `protocol.md` with wire-format schema, example messages, framing rules, and error handling semantics.
+5. Produce `security.md` with concrete crypto choices, key derivation steps, and threat model.
+
+Phase 2 — Implementation
+6. Implement the full project according to the file-tree spec described below (repeat file-tree in your output). Use interface-driven Go modules and write idiomatic, well-documented code with comments. DO NOT use global state; use dependency injection for testability.
+7. Implement discovery module using mDNS (`grandcat/zeroconf`) and UDP broadcast fallback.
+8. Implement transport module: long-lived TCP connections, JSON-lines framing, backpressure-safe writer queue, and message routing for rooms.
+9. Implement optional WebSocket gateway for browser clients.
+10. Implement crypto module: HKDF key derivation from passphrases, AES-256-GCM encrypt/decrypt, HMAC authenticity option, replay protection.
+11. Implement TUI using Bubble Tea + Lip Gloss matching the HUD spec above and a headless mode for daemons.
+12. Provide a small optional web UI (embedded) exposing settings and logs.
+13. Provide a `meshroomctl` CLI with status/send/wipe commands.
+14. Implement rate-limiting and per-peer throttling.
+
+Phase 3 — Tests & CI
+15. Provide unit tests for all modules and integration tests that spawn multiple processes on localhost to validate discovery and message delivery.
+16. Provide GitHub Actions CI pipeline that runs unit tests and cross-compiles for linux/amd64, linux/arm64, darwin/amd64, windows/amd64, and android/arm64. Produce release artifacts (binaries + checksums).
+
+Phase 4 — Packaging & Docs
+17. Provide `scripts/build.sh` and `scripts/release.sh` (goreleaser integration).
+18. Write `README.md` with one-line install, examples, Termux notes, security/privacy notice, and demo script.
+19. Produce example systemd unit and Termux run script.
+20. Create `docs/` with design, protocol, and security docs.
+
+Output requirements
+- First return: annotated bibliography and prioritized implementation plan (which parts to implement first and why).
+- Then return: full repo file-tree with brief file descriptions.
+- Then return: a checklist of tasks and acceptance criteria.
+- Then return: links to the exact versions of libraries you will use (go.mod constraints).
+- Then: run unit & integration tests and include their output.
+- Then: provide release artifacts (binaries) attached or accessible via generated GitHub release (if environment available). If you cannot attach binaries, provide goreleaser config and exact build commands for reproducing artifacts locally.
+- Include automated cross-compile commands and instructions to build for Termux (android/arm64).
+
+Hard constraints
+- The solution must be written in Go.
+- No external servers; same-LAN only for v1.
+- No storage of chat history on disk by default.
+- Use permissive open-source license (MIT recommended).
+- Include an explicit section listing operational limitations and known failure modes.
+
+Citation & transparency
+- You MUST include the list of web sources used for research (at least 10) and cite them inline in the design decisions where relevant.
+- You must not assume knowledge beyond today's date without verifying via web search.
+
+Deliver the full repository content, tests, CI config, and README. Begin by returning an annotated bibliography and a prioritized implementation plan. Then implement. Start with research now.
+
+Final notes — enforcement and expectations
+
+The builder-AI must perform web searches before making architectural claims and must include citations for the 5 most important claims (libraries, cross-compile, TUI choice, discovery approach, websocket choice). Examples of citations to include: grandcat/zeroconf for mDNS, charmbracelet/bubbletea and lipgloss for TUI, gorilla/websocket for WebSocket fallback, Go cross-compile docs, UDP broadcast references. 
+
+
+No code in this message. The prompt above is ready to send to a build-AI. Build it cleanly; expect to iterate on network edge-cases.
